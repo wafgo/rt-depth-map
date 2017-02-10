@@ -14,6 +14,7 @@ target := rt-depth-map.elf
 .PHONY: all clean
 
 all: $(target)
+
 $(target): $(obj-y)
 	@echo "[LD] $@ from $?"
 	@$(CC) $(CFLAGS) -o $@ $(obj-y) $(LIBS)
