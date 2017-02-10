@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS += -Iinclude -I/usr/local/include/opencv -I/usr/local/include -L/usr/local/lib -g3
+CFLAGS += -Iinclude -I/usr/local/include/opencv -I/usr/local/include -L/usr/local/lib -g3 -MMD
 LIBS += -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired \
 		-lopencv_ccalib -lopencv_dnn -lopencv_dpm -lopencv_fuzzy -lopencv_line_descriptor -lopencv_optflow -lopencv_plot \
 		-lopencv_reg -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_rgbd -lopencv_surface_matching \
@@ -11,11 +11,25 @@ LIBS += -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -
 obj-y := main.o mjpeg.o
 target := rt-depth-map.elf
 
-all: $(obj-y)
-	$(CC) $(CFLAGS) -o $(target) $(obj-y) $(LIBS)
+.PHONY: all clean
+
+all: $(target)
+$(target): $(obj-y)
+	@echo "[LD] $@ from $?"
+	@$(CC) $(CFLAGS) -o $@ $(obj-y) $(LIBS)
 	
 clean:
-	rm -f *.o *.elf *.jpg *.yml
+	@echo "[RM]" 
+	@rm -f *.o *.elf *.d
 	
 %.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	@echo "[CC] $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+%.d : ;
+
+.PRECIOUS: %.d
+
+.PHONY: clean
+
+-include $(obj-y:.o=.d)
