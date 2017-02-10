@@ -1,3 +1,8 @@
+# eclipse project files
+.project
+.cproject
+.settings/
+
 # Compiled Object files
 *.slo
 *.lo
