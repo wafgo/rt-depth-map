@@ -30,6 +30,4 @@ clean:
 
 .PRECIOUS: %.d
 
-.PHONY: clean
-
 -include $(obj-y:.o=.d)
