@@ -33,6 +33,8 @@ using namespace cv;
 using namespace std;
 using namespace cv::ximgproc;
 
+#define CALIB_UNIT_MM	25.0
+
 //#define ENABLE_POST_FILTER
 
 #define BM			0
@@ -65,6 +67,7 @@ enum roi_capture_state {
 static void mouse_callback(int event, int x, int y, int flags, void* cookie)
 {
 	static int cap_state = WAIT_FOR_START_POINT;
+	Mat* disp = (Mat*) cookie;
 
 	switch (cap_state) {
 	case WAIT_FOR_START_POINT:
@@ -196,10 +199,10 @@ static void v4l2_init(int i, const char* dev_name)
 
 
 
-static float calculate_depth(Mat xyz)
+static float calculate_depth(Mat xyz, Mat disp)
 {
-	if (!new_roi_available)
-		return 0.0f;
+	rectangle(disp, Point(roi_box.x, roi_box.y), Point(roi_box.x + roi_box.width, roi_box.y + roi_box.height), Scalar(255,255,255), 1, LINE_8);
+	ostringstream distance_text;
 
 	double res = 0.0;
 	int cnt = 0;
@@ -218,8 +221,10 @@ static float calculate_depth(Mat xyz)
 
 	if (cnt > 0)
 		res = res/cnt;
-
-	printf("----------------------> d = %lf\n", res);
+//	distance_text.fixed;
+//	distance_text.precision(1);
+	distance_text << res * CALIB_UNIT_MM/10.0 << " cm";
+	putText(disp, String(distance_text.str().c_str()), Point(roi_box.x, roi_box.y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255), 1, LINE_8);
 	new_roi_available = false;
 	return 0.0f;
 }
@@ -311,7 +316,7 @@ int main(int, char**)
 	namedWindow("left", 1);
 	namedWindow("right", 1);
 	namedWindow("raw_disp", 0);
-	setMouseCallback("raw_disp", mouse_callback, NULL);
+	setMouseCallback("raw_disp", mouse_callback, &raw_disp);
 	Mat img[2];
 	Mat left_gray, right_gray;
 	Mat right_disp, filtered_disparity_map;
@@ -376,9 +381,13 @@ int main(int, char**)
 		imshow("disp", filtered_disp_vis);
 #endif
 		getDisparityVis(left_disp, raw_disp);
-		imshow("raw_disp", raw_disp);
+
+		left_disp /= 16.;
+
 		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
-		calculate_depth(xyz);
+
+		calculate_depth(xyz, raw_disp);
+		imshow("raw_disp", raw_disp);
 		waitKey(10);
 
 		//Canny(edges, edges, 0, 30, 3);
