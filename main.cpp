@@ -40,7 +40,7 @@ using namespace cv::ximgproc;
 #define BM			0
 #define SGBM		1
 
-#define BM_TYPE		SGBM
+#define BM_TYPE		BM
 
 
 struct v4l2_capability cap[2];
@@ -56,6 +56,14 @@ Ptr<DisparityWLSFilter> wls_filter;
 
 char* converted[2];
 static bool new_roi_available = false;
+static vector<vector<Point> > contours;
+static vector<Vec4i> hierarchy;
+static int iLowH = 0;
+static int iHighH = 9;
+static int iLowS = 69;
+static int iHighS = 255;
+static int iLowV = 0;
+static int iHighV = 255;
 
 enum roi_capture_state {
 	WAIT_FOR_START_POINT,
@@ -199,15 +207,15 @@ static void v4l2_init(int i, const char* dev_name)
 
 
 
-static float calculate_depth(Mat xyz, Mat disp)
+static float calculate_depth(Mat xyz, Mat disp, Rect& region)
 {
-	rectangle(disp, Point(roi_box.x, roi_box.y), Point(roi_box.x + roi_box.width, roi_box.y + roi_box.height), Scalar(255,255,255), 1, LINE_8);
+	rectangle(disp, Point(region.x, region.y), Point(region.x + region.width, region.y + region.height), Scalar(255,255,255), 1, LINE_8);
 	ostringstream distance_text;
 
 	double res = 0.0;
 	int cnt = 0;
 	const double max_z = 1.0e4;
-	xyz = xyz(roi_box);
+	xyz = xyz(region);
 
 	for (int y = 0; y < xyz.rows; y++) {
 		for (int x = 0; x < xyz.cols; x++) {
@@ -224,7 +232,7 @@ static float calculate_depth(Mat xyz, Mat disp)
 //	distance_text.fixed;
 //	distance_text.precision(1);
 	distance_text << res * CALIB_UNIT_MM/10.0 << " cm";
-	putText(disp, String(distance_text.str().c_str()), Point(roi_box.x, roi_box.y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255), 1, LINE_8);
+	putText(disp, String(distance_text.str().c_str()), Point(region.x, region.y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,255), 1, LINE_8);
 	new_roi_available = false;
 	return 0.0f;
 }
@@ -243,6 +251,8 @@ int main(int, char**)
 	Mat left_disp, raw_disp;
 	int numberOfDisparities = 64 * 4;
 	Mat xyz;
+	Rect b_roi;
+	double exec_time;
 	roi_box = Rect();
 #if BM_TYPE == BM
 	Ptr<StereoBM> left_matcher = StereoBM::create(numberOfDisparities, 9);
@@ -259,8 +269,8 @@ int main(int, char**)
 	imgSize.width = 1280;
 	imgSize.height = 720;
 
-	FileStorage intrinsics("/home/sefo/devel/stereoVision/zed-calibration/backup/ELP/CAL_05-Feb-2017-11-59-1486292360-best(1.202)/intrinsics.yml", FileStorage::READ);
-	FileStorage extrinsics("/home/sefo/devel/stereoVision/zed-calibration/backup/ELP/CAL_05-Feb-2017-11-59-1486292360-best(1.202)/extrinsics.yml", FileStorage::READ);
+	FileStorage intrinsics("intrinsics.yml", FileStorage::READ);
+	FileStorage extrinsics("extrinsics.yml", FileStorage::READ);
 
 	if (!intrinsics.isOpened() || !extrinsics.isOpened()) {
 		printf("could not open intrinsics or extrinsics\n");
@@ -314,7 +324,7 @@ int main(int, char**)
 	v4l2_init(1, "/dev/video1");
 
 	namedWindow("left", 1);
-	namedWindow("right", 1);
+	//namedWindow("right", 1);
 	namedWindow("raw_disp", 0);
 	setMouseCallback("raw_disp", mouse_callback, &raw_disp);
 	Mat img[2];
@@ -329,6 +339,9 @@ int main(int, char**)
 	debug("after roi width = %d, height = %d\n", roif.width, roif.height);
 
 	for (;;) {
+		Mat imgHSV;
+		Mat imgThresholded;
+
 		if (ioctl(fd[0], VIDIOC_QBUF, &bufferinfo[0]) < 0) {
 			printf("VIDIOC_QBUF error %d\n", errno);
 			break;
@@ -347,25 +360,66 @@ int main(int, char**)
 			break;
 		}
 
+		exec_time = (double)getTickCount();
 		mjpeg2rgb(buffer[0], bufferinfo[0].bytesused, width[0], height[0], converted[0]);
 		mjpeg2rgb(buffer[1], bufferinfo[1].bytesused, width[1], height[1], converted[1]);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "Jpeg2RGB Time: " << exec_time<<" s" << endl;
 
+		exec_time = (double)getTickCount();
 		cvtColor(img[0], left_gray, CV_RGB2GRAY);
 		cvtColor(img[1], right_gray, CV_RGB2GRAY);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "cvtColor Time: " << exec_time<<" s" << endl;
 
+		exec_time = (double)getTickCount();
 		remap(left_gray, left_rect, map11, map12, INTER_LINEAR);
 		left_rect = left_rect(roif);
 
 		remap(right_gray, right_rect, map21, map22, INTER_LINEAR);
 		right_rect = right_rect(roif);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "remap Time: " << exec_time<<" s" << endl;
 
-		imshow("left", left_rect);
-		imshow("right", right_rect);
+		Mat img_rectified;
 
+		remap(img[0], img_rectified, map11, map12, INTER_LINEAR);
+		img_rectified = img_rectified(roif);
+
+		cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR);
+		exec_time = (double)getTickCount();
+		cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+		//morphological opening (remove small objects from the foreground)
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
+
+		//morphological closing (fill small holes in the foreground)
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
+		findContours(imgThresholded, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
+
+		for (int i = 0; i < contours.size(); i++) {
+			Scalar color = Scalar(255, 255, 255);
+			b_roi = boundingRect(Mat(contours[i]));
+			rectangle(img_rectified, b_roi, Scalar(0,0,0));
+		}
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "Contours Time: " << exec_time<<" s" << endl;
+		imshow("left", img_rectified);
+		//imshow("right", right_rect);
+
+		exec_time = (double)getTickCount();
 		GaussianBlur(left_rect, left_rect, Size(7,7), 1.5, 1.5);
 		GaussianBlur(right_rect, right_rect, Size(7,7), 1.5, 1.5);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "Gaussian Blur Time: " << exec_time<<" s" << endl;
+
+		exec_time = (double)getTickCount();
 
 		left_matcher->compute(left_rect, right_rect, left_disp);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "Matching Time: " << exec_time<<" s" << endl;
 #ifdef ENABLE_POST_FILTER
 		right_matcher->compute(right_rect,left_rect, right_disp);
 
@@ -384,9 +438,12 @@ int main(int, char**)
 
 		left_disp /= 16.;
 
+		exec_time = (double)getTickCount();
 		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
+		exec_time = ((double)getTickCount() - exec_time)/getTickFrequency();
+		cout << "Reproject Time: " << exec_time<<" s" << endl;
 
-		calculate_depth(xyz, raw_disp);
+		calculate_depth(xyz, raw_disp, b_roi);
 		imshow("raw_disp", raw_disp);
 		waitKey(10);
 

@@ -110,7 +110,7 @@ int mjpeg2rgb(char *in, int len, int width, int height, char *out) {
   }
 
   jpeg_create_decompress(&dinfo);
-  jpeg_mem_src(&dinfo, (const unsigned char*)in, len);
+  jpeg_mem_src(&dinfo, (unsigned char*)in, len);
   jpeg_read_header(&dinfo, TRUE);
 
   if (dinfo.dc_huff_tbl_ptrs[0] == NULL) {

@@ -8,7 +8,7 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define debug(fmt, ...) printf(fmt, ##__VA_ARGS__)
