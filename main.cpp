@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <linux/videodev2.h>
 #include <iostream>
+#include <iomanip>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -39,7 +40,7 @@ using namespace cv::ximgproc;
 
 #define CALIB_UNIT_MM	25.0
 
-#define TRACK_RED_OBJECTS
+//#define DUMMY_DEPTH_CALCULATION
 //#define ENABLE_POST_FILTER
 
 #define MORPH_FILTER_DX		10
@@ -102,8 +103,8 @@ static void mouse_callback(int event, int x, int y, int flags, void* cookie)
 				mouse_selected.y = y;
 			}
 			new_roi_available = true;
-			debug("captured roi at x = %d y = %d with width = %d and height %d\n", mouse_selected.x, mouse_selected.y, mouse_selected.width,
-					mouse_selected.height);
+			debug("captured roi at x = %d y = %d with width = %d and height %d\n", mouse_selected.x, mouse_selected.y,
+					mouse_selected.width, mouse_selected.height);
 			cap_state = WAIT_FOR_UNLOCK;
 		}
 		break;
@@ -211,7 +212,12 @@ static void v4l2_init(int i, const char* dev_name)
 	}
 }
 
-static float calculate_depth(Mat xyz, Mat disp, vector<Rect>& region, vector<Point2f> center_of_object)
+#ifdef DUMMY_DEPTH_CALCULATION
+static RNG rng( 0xFFFFFFFF );
+#endif
+
+#define MIN_DISP_VALS		100
+static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Point2f> center_of_object)
 {
 	Mat tmp_xyz;
 	region.push_back(mouse_selected);
@@ -220,6 +226,10 @@ static float calculate_depth(Mat xyz, Mat disp, vector<Rect>& region, vector<Poi
 
 	for (int i = 0; i < region.size(); ++i) {
 		Rect* reg = &region[i];
+
+		if (reg->area() < MIN_DISP_VALS)
+			continue;
+
 		double aspect_ratio = (double) reg->width / (double) reg->height;
 		Point2f* center = &center_of_object[i];
 		Rect disparity_calculation_region;
@@ -229,14 +239,17 @@ static float calculate_depth(Mat xyz, Mat disp, vector<Rect>& region, vector<Poi
 		const double max_z = 1.0e4;
 		ostringstream distance_text;
 
-		rectangle(disp, Point(reg->x, reg->y), Point(reg->x + reg->width, reg->y + reg->height), Scalar(255, 255, 255),
+		rectangle(img, Point(reg->x, reg->y), Point(reg->x + reg->width, reg->y + reg->height), Scalar(255, 255, 255),
 				1, LINE_8);
-
+#ifndef DUMMY_DEPTH_CALCULATION
 		/* note the aspect ratio */
 		h = max<double>(1.0, reg->height / 10.0);
 		w = aspect_ratio * h;
 
-		while (cnt < 10) {
+		while (cnt < MIN_DISP_VALS) {
+			if (w >= reg->width || h >= reg->height)
+				break;
+
 			x = (double) center->x - (w / 2.0);
 			y = (double) center->y - (h / 2.0);
 			disparity_calculation_region.width = (int) w;
@@ -259,22 +272,33 @@ static float calculate_depth(Mat xyz, Mat disp, vector<Rect>& region, vector<Poi
 					cnt++;
 				}
 			}
-			if (cnt < 10) {
+			if (cnt < MIN_DISP_VALS) {
 				h = h + 1.0;
 				w += aspect_ratio;
 			}
 
 		}
-		rectangle(disp, Point(disparity_calculation_region.x, disparity_calculation_region.y),
-				Point(disparity_calculation_region.x + disparity_calculation_region.width,
-						disparity_calculation_region.y + disparity_calculation_region.height), Scalar(255, 255, 255), 1, LINE_8);
-		if (cnt > 0)
-			res = res / cnt;
+		if (cnt >= MIN_DISP_VALS) {
+#ifdef DEBUG
+			rectangle(img, Point(disparity_calculation_region.x, disparity_calculation_region.y),
+					Point(disparity_calculation_region.x + disparity_calculation_region.width,
+							disparity_calculation_region.y + disparity_calculation_region.height),
+					Scalar(255, 255, 255), 1, LINE_8);
+#endif
+			if (cnt > 0)
+				res = res / cnt;
+
+			distance_text << std::fixed << setprecision(1) << res * CALIB_UNIT_MM / 10.0 << " cm";
+#else
+			rng.uniform(0.0, 100.0);
+			res = (double) rng;
+			distance_text << res << " cm";
+#endif
 //	distance_text.fixed;
 //	distance_text.precision(1);
-		distance_text << res * CALIB_UNIT_MM / 10.0 << " cm";
-		putText(disp, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
-				Scalar(255, 255, 255), 1, LINE_8);
+			putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
+					Scalar(255, 255, 255), 1, LINE_8);
+		}
 	}
 	new_roi_available = false;
 	return 0.0f;
@@ -382,7 +406,8 @@ int main(int, char**)
 	v4l2_init(0, "/dev/video0");
 	v4l2_init(1, "/dev/video1");
 
-	namedWindow("left", 1);
+	namedWindow("left", WINDOW_NORMAL | WINDOW_FULLSCREEN);
+	setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
 	//namedWindow("right", 1);
 	//namedWindow("raw_disp", 0);
 	setMouseCallback("left", mouse_callback, &raw_disp);
@@ -424,13 +449,13 @@ int main(int, char**)
 		mjpeg2rgb(buffer[0], bufferinfo[0].bytesused, width[0], height[0], converted[0]);
 		mjpeg2rgb(buffer[1], bufferinfo[1].bytesused, width[1], height[1], converted[1]);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Jpeg2RGB Time: %lf s", exec_time);
+		debug("Jpeg2RGB Time: %lf s\n", exec_time);
 
 		exec_time = (double) getTickCount();
 		cvtColor(img[0], left_gray, CV_RGB2GRAY);
 		cvtColor(img[1], right_gray, CV_RGB2GRAY);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("cvtColor Time: %lf s", exec_time);
+		debug("cvtColor Time: %lf s\n", exec_time);
 
 		exec_time = (double) getTickCount();
 		remap(left_gray, left_rect, remap_left1, remap_left2, INTER_LINEAR);
@@ -439,7 +464,7 @@ int main(int, char**)
 		remap(right_gray, right_rect, remap_right1, remap_right2, INTER_LINEAR);
 		right_rect = right_rect(roif);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("remap Time: %lf s", exec_time);
+		debug("remap Time: %lf s\n", exec_time);
 
 		remap(img[0], img_rectified, remap_left1, remap_left2, INTER_LINEAR);
 		img_rectified = img_rectified(roif);
@@ -460,7 +485,7 @@ int main(int, char**)
 		erode(imgThresholded, imgThresholded,
 				getStructuringElement(MORPH_ELLIPSE, Size(MORPH_FILTER_DX, MORPH_FILTER_DY)));
 		findContours(imgThresholded, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
-		imshow("th", imgThresholded);
+		//imshow("th", imgThresholded);
 
 		vector<Point2f> mc(contours.size());
 
@@ -469,23 +494,23 @@ int main(int, char**)
 			mc[i] = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 			Rect br = boundingRect(Mat(contours[i]));
 			b_roi.push_back(br);
-			circle(img_rectified, mc[i], 4, Scalar(255, 255, 255), -1, 8, 0);
+			//circle(img_rectified, mc[i], 4, Scalar(255, 255, 255), -1, 8, 0);
 		}
 
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Contours Time: %lf s", exec_time);
-
+		debug("Contours Time: %lf s\n", exec_time);
+#ifndef DUMMY_DEPTH_CALCULATION
 		exec_time = (double) getTickCount();
 		GaussianBlur(left_rect, left_rect, Size(7, 7), 1.5, 1.5);
 		GaussianBlur(right_rect, right_rect, Size(7, 7), 1.5, 1.5);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Gaussian Blur Time: %lf s", exec_time);
+		debug("Gaussian Blur Time: %lf s\n", exec_time);
 
 		exec_time = (double) getTickCount();
 
 		left_matcher->compute(left_rect, right_rect, left_disp);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Matching Time: %lf s", exec_time);
+		debug("Matching Time: %lf s\n", exec_time);
 #ifdef ENABLE_POST_FILTER
 		right_matcher->compute(right_rect,left_rect, right_disp);
 
@@ -507,8 +532,8 @@ int main(int, char**)
 		exec_time = (double) getTickCount();
 		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Reproject Time: %lf s", exec_time);
-
+		debug("Reproject Time: %lf s\n", exec_time);
+#endif
 		calculate_depth(xyz, img_rectified, b_roi, mc);
 		b_roi.clear();
 		imshow("left", img_rectified);
