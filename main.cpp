@@ -40,7 +40,7 @@ using namespace cv::ximgproc;
 
 #define CALIB_UNIT_MM	25.0
 
-//#define DUMMY_DEPTH_CALCULATION
+#define DUMMY_DEPTH_CALCULATION
 //#define ENABLE_POST_FILTER
 
 #define MORPH_FILTER_DX		10
@@ -294,11 +294,11 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 			res = (double) rng;
 			distance_text << res << " cm";
 #endif
-//	distance_text.fixed;
-//	distance_text.precision(1);
 			putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
 					Scalar(255, 255, 255), 1, LINE_8);
+#ifndef DUMMY_DEPTH_CALCULATION
 		}
+#endif
 	}
 	new_roi_available = false;
 	return 0.0f;
@@ -406,7 +406,7 @@ int main(int, char**)
 	v4l2_init(0, "/dev/video0");
 	v4l2_init(1, "/dev/video1");
 
-	namedWindow("left", WINDOW_NORMAL | WINDOW_FULLSCREEN);
+	namedWindow("left", WINDOW_NORMAL);
 	setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
 	//namedWindow("right", 1);
 	//namedWindow("raw_disp", 0);
@@ -493,7 +493,11 @@ int main(int, char**)
 			Moments mu = moments(contours[i], true);
 			mc[i] = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 			Rect br = boundingRect(Mat(contours[i]));
-			b_roi.push_back(br);
+			Mat mask;
+			drawContours(mask, contours, i,  Scalar(255));
+			Scalar mv = mean(imgThresholded(br), mask);
+			if ( mv.val[0] >= 120 )
+				b_roi.push_back(br);
 			//circle(img_rectified, mc[i], 4, Scalar(255, 255, 255), -1, 8, 0);
 		}
 
