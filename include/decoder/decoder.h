@@ -2,11 +2,9 @@
  * decoder.h
  *
  *  Created on: 02.04.2017
- *      Author: sefo
+ *      Author: wadim mueller
  */
 
-
-#include "opencv2/opencv.hpp"
 
 class DecoderDevice
 {

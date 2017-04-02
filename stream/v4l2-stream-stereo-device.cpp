@@ -1,5 +1,5 @@
 /*
- * v4l2-stream-device.cpp
+ * v4l2-stream-stereo-device.cpp
  *
  *  Created on: 02.04.2017
  *      Author: sefo

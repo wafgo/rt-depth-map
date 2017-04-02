@@ -1,9 +1,10 @@
 /*
- * mjpeg.cpp
+ * mjpeg-decoder-sw.cpp
  *
  *  Created on: 01.02.2017
  *      Author: wadim mueller
  */
+
 #include "decoder/mjpeg-decoder-sw.h"
 
 struct error_mgr {

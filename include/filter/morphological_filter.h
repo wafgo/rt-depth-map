@@ -2,7 +2,7 @@
  * morphological_filter.h
  *
  *  Created on: 26.03.2017
- *      Author: sefo
+ *      Author: wadim mueller
  */
 
 #ifndef INCLUDE_MORPHOLOGICAL_FILTER_H_

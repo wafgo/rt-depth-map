@@ -14,24 +14,14 @@
 #include "opencv2/ximgproc/disparity_filter.hpp"
 #include <iostream>
 #include <string.h>
-#include <unistd.h>
-#include <linux/videodev2.h>
-#include <iostream>
-#include <iomanip>
-#include <stdio.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <fcntl.h>
 #include "math.h"
+#include <iomanip>
 #include "debug.h"
 #include "decoder/mjpeg-decoder-sw.h"
 #include "filter/morphological_filter.h"
 #include "stream/v4l2-stream-stereo-device.h"
 #include "decoder/mjpeg-decoder-sw.h"
+#include "stereo-matcher/bm-sw.h"
 
 using namespace cv;
 using namespace std;
@@ -59,7 +49,7 @@ Rect mouse_selected;
 Ptr<DisparityWLSFilter> wls_filter;
 #endif
 
-static char* converted[2];
+static char* rgb[2];
 static int iLowH = 0;
 static int iHighH = 9;
 static int iLowS = 69;
@@ -207,9 +197,7 @@ int main(int, char**)
 	Size imgSize;
 	Mat remap_left1, remap_left2, remap_right1, remap_right2;
 	Mat left_rect, right_rect;
-	Mat framel, framer;
-	Mat left, right;
-	Mat left_disp, raw_disp;
+	Mat left_disp;
 	int numberOfDisparities = NUM_DISPARITIES;
 	Mat xyz;
 	vector<vector<Point> > contours;
@@ -221,7 +209,7 @@ int main(int, char**)
 	double exec_time;
 	mouse_selected = Rect();
 #if BM_TYPE == BM
-	Ptr<StereoBM> left_matcher = StereoBM::create(numberOfDisparities, 9);
+
 #elif BM_TYPE == SGBM
 	Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, numberOfDisparities, 9);
 #endif
@@ -238,6 +226,7 @@ int main(int, char**)
 	get_rectified_remap_matrices("intrinsics.yml", "extrinsics.yml", imgSize, remap_left1, remap_left2, remap_right1,
 			remap_right2, Q, &roif);
 
+	SWMatcherKonolige* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, numberOfDisparities, numberOfDisparities, 10, 100, 32, 1);
 #if BM_TYPE == SGBM
 	left_matcher->setP1(8 * 3 * 5 * 5);
 	left_matcher->setP2(32 * 3 * 5 * 5);
@@ -248,17 +237,7 @@ int main(int, char**)
 	left_matcher->setSpeckleRange(32);
 	left_matcher->setDisp12MaxDiff(1);
 #elif BM_TYPE == BM
-	left_matcher->setROI1(roif);
-	left_matcher->setROI2(roif);
-	left_matcher->setPreFilterCap(31);
-	left_matcher->setBlockSize(13);
-	left_matcher->setMinDisparity(0);
-	left_matcher->setNumDisparities(numberOfDisparities);
-	left_matcher->setTextureThreshold(10);
-	left_matcher->setUniquenessRatio(10);
-	left_matcher->setSpeckleWindowSize(100);
-	left_matcher->setSpeckleRange(32);
-	left_matcher->setDisp12MaxDiff(1);
+
 #endif
 
 	//setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
@@ -267,9 +246,9 @@ int main(int, char**)
 	Mat right_disp, filtered_disparity_map;
 
 	for (int i = 0; i < 2; ++i) {
-		converted[i] = new char[videoDev->getHeight() * videoDev->getWidth() * 3];
+		rgb[i] = new char[videoDev->getHeight() * videoDev->getWidth() * 3];
 		debug("%d: original width = %d ; height = %d\n", i, width[i], height[i]);
-		img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, converted[i]);
+		img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, rgb[i]);
 	}
 
 
@@ -285,8 +264,8 @@ int main(int, char**)
 		videoDev->getBuffers(&__bl, &__br);
 
 		exec_time = (double) getTickCount();
-		mjpegDecoder->decode(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);//(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);
-		mjpegDecoder->decode(__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), converted[1]);
+		mjpegDecoder->decode(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), rgb[0]);
+		mjpegDecoder->decode(__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), rgb[1]);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Jpeg2RGB Time: %lf s\n", exec_time);
 
@@ -312,10 +291,10 @@ int main(int, char**)
 		exec_time = (double) getTickCount();
 		cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
-		//morphological opening (remove small objects from the foreground)
+
 		morphological_filter(imgThresholded);
+
 		findContours(imgThresholded, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
-		//imshow("th", imgThresholded);
 
 		vector<Point2f> mc(contours.size());
 
@@ -341,7 +320,7 @@ int main(int, char**)
 
 		exec_time = (double) getTickCount();
 
-		left_matcher->compute(left_rect, right_rect, left_disp);
+		matcher->compute(left_rect, right_rect, left_disp);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Matching Time: %lf s\n", exec_time);
 #ifdef ENABLE_POST_FILTER
@@ -358,7 +337,7 @@ int main(int, char**)
 
 		imshow("disp", filtered_disp_vis);
 #endif
-		getDisparityVis(left_disp, raw_disp);
+	//	getDisparityVis(left_disp, raw_disp);
 
 		left_disp /= 16.;
 
@@ -371,8 +350,6 @@ int main(int, char**)
 		imshow("left", img_rectified);
 		//imshow("raw_disp", raw_disp);
 		waitKey(10);
-
-		//Canny(edges, edges, 0, 30, 3);
 	}
 
 	return 0;
