@@ -2,7 +2,7 @@
  * mjpeg.cpp
  *
  *  Created on: 01.02.2017
- *      Author: sefo
+ *      Author: wadim mueller
  */
 #include <stdio.h>
 #include <stddef.h>
@@ -91,12 +91,6 @@ static void insert_huff_tables(j_decompress_ptr dinfo) {
   COPY_HUFF_TABLE(dinfo, ac_huff_tbl_ptrs[1], ac_chromi);
 }
 
-/** @brief Convert an MJPEG frame to RGB
- * @ingroup frame
- *
- * @param in MJPEG frame
- * @param out RGB frame
- */
 int mjpeg2rgb(char *in, int len, int width, int height, char *out) {
   struct jpeg_decompress_struct dinfo;
   struct error_mgr jerr;

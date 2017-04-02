@@ -1,0 +1,1 @@
+obj-y += video-stream-stereo-device.o v4l2-stream-stereo-device.o

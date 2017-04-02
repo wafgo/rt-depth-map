@@ -1,26 +1,18 @@
-#CROSS_COMPILE = /opt/petalinux/2016.3/sysroots/x86_64-petalinux-linux/usr/bin/arm-xilinx-linux-gnueabi/arm-xilinx-linux-gnueabi-
-SYSROOT = /opt/petalinux/2016.3/sysroots/cortexa9hf-neon-xilinx-linux-gnueabi
-ROOTFS := /home/sefo/mounts/nfs/zrfs2/home/root/
-CC = $(CROSS_COMPILE)g++
+# Wadim Mueller
+# central makefile to build the app,
+# all objects are build and placed in the corresponding subdirs by Makefile.build and then linked here
+# currently i am not able to build relocatable files in the subdirs with g++ -r, thats the reason i need to search all objects via find
+include Makefile.include
 
-ifeq ($(CROSS_COMPILE),)
-CFLAGS += -Iinclude -I/usr/local/include/opencv -I/usr/local/include -L/usr/local/lib -g3 -MMD
-else
-CFLAGS += --sysroot=$(SYSROOT) -Iinclude -I$(SYSROOT)/usr/include/opencv -I$(SYSROOT)/usr/include -L$(SYSROOT)/usr/lib -march=armv7-a -mfloat-abi=hard -mcpu=cortex-a9
-endif
+subdirs := filter/ decoder/ bm/ stream/
+clean_subdirs := $(addsuffix __clean,$(subdirs))
 
-LIBS += -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired \
-		-lopencv_ccalib -lopencv_dnn -lopencv_dpm -lopencv_fuzzy -lopencv_line_descriptor -lopencv_optflow -lopencv_plot \
-		-lopencv_reg -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_rgbd -lopencv_surface_matching \
-		-lopencv_tracking -lopencv_datasets -lopencv_text -lopencv_face -lopencv_xfeatures2d -lopencv_shape -lopencv_video \
-		-lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_flann -lopencv_xobjdetect -lopencv_objdetect -lopencv_ml \
-		-lopencv_xphoto -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core -ljpeg
-
-
-obj-y := main.o mjpeg.o
+obj-y += main.o
 target := rt-depth-map.elf
 
-.PHONY: all clean
+all-obj = $(sort $(patsubst ./%,%,$(shell find . -type f -name \*.o)))
+
+.PHONY: all clean $(clean_subdirs)
 
 all: $(target)
 	
@@ -32,13 +24,21 @@ else
 	@cp $(target) $(ROOTFS)
 endif
 	
-$(target): $(obj-y)
-	@echo "[LD] $@ from $?"
-	@$(CC) $(CFLAGS) -o $@ $(obj-y) $(LIBS)
+$(target): $(subdirs) $(obj-y)
+	@echo "[LD] $@ from $(all-obj)"
+	@$(CC) $(CFLAGS) -o $@ $(all-obj) $(LIBS)
 	
-clean:
-	@echo "[RM]" 
+clean: $(clean_subdirs)
+	@echo "[RM] /" 
 	@rm -f *.o *.elf *.d
+
+$(clean_subdirs):
+	@make $(SUBMAKE_ARGS) -f $(BUILD_MAKEFILE) obj=$(patsubst %__clean,%,$@) _clean
+	
+.PHONY: $(subdirs)
+
+$(subdirs): 
+	@make $(SUBMAKE_ARGS) -f $(BUILD_MAKEFILE) obj=$@ _all
 	
 %.o: %.cpp
 	@echo "[CC] $<"

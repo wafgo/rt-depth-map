@@ -1,0 +1,1 @@
+obj-y += mf-hw-ip.o mf-sw.o

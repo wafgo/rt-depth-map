@@ -26,9 +26,11 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include "video_capture.h"
 #include "math.h"
 #include "debug.h"
+#include "decoder/mjpeg.h"
+#include "filter/morphological_filter.h"
+#include "stream/v4l2-stream-stereo-device.h"
 
 using namespace cv;
 using namespace std;
@@ -40,7 +42,6 @@ using namespace cv::ximgproc;
 
 #define CALIB_UNIT_MM	25.0
 
-#define DUMMY_DEPTH_CALCULATION
 //#define ENABLE_POST_FILTER
 
 #define MORPH_FILTER_DX		10
@@ -212,11 +213,8 @@ static void v4l2_init(int i, const char* dev_name)
 	}
 }
 
-#ifdef DUMMY_DEPTH_CALCULATION
-static RNG rng( 0xFFFFFFFF );
-#endif
-
 #define MIN_DISP_VALS		100
+
 static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Point2f> center_of_object)
 {
 	Mat tmp_xyz;
@@ -241,7 +239,19 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 
 		rectangle(img, Point(reg->x, reg->y), Point(reg->x + reg->width, reg->y + reg->height), Scalar(255, 255, 255),
 				1, LINE_8);
-#ifndef DUMMY_DEPTH_CALCULATION
+
+		tmp_xyz = xyz(*reg);
+
+		for (int y = 0; y < tmp_xyz.rows; y++) {
+			for (int x = 0; x < tmp_xyz.cols; x++) {
+				Vec3f point = tmp_xyz.at<Vec3f>(y, x);
+				if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z)
+					continue;
+				res += point[2];
+				cnt++;
+			}
+		}
+#if 0
 		/* note the aspect ratio */
 		h = max<double>(1.0, reg->height / 10.0);
 		w = aspect_ratio * h;
@@ -285,20 +295,14 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 							disparity_calculation_region.y + disparity_calculation_region.height),
 					Scalar(255, 255, 255), 1, LINE_8);
 #endif
+#endif
 			if (cnt > 0)
 				res = res / cnt;
 
 			distance_text << std::fixed << setprecision(1) << res * CALIB_UNIT_MM / 10.0 << " cm";
-#else
-			rng.uniform(0.0, 100.0);
-			res = (double) rng;
-			distance_text << res << " cm";
-#endif
 			putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
 					Scalar(255, 255, 255), 1, LINE_8);
-#ifndef DUMMY_DEPTH_CALCULATION
-		}
-#endif
+		//}
 	}
 	new_roi_available = false;
 	return 0.0f;
@@ -359,6 +363,28 @@ int main(int, char**)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat img_rectified;
+	VideoStreamStereoDevice* videoDev = new V4LStereoStreamDevice("/dev/video0", "/dev/video1", IMG_WIDTH, IMG_HEIGHT);
+	Mat __img[2];
+	converted[0] = (char*) malloc(videoDev->getWidth() * videoDev->getHeight() * 3);
+	converted[1] = (char*) malloc(videoDev->getWidth() * videoDev->getHeight() * 3);
+	namedWindow("left", WINDOW_NORMAL);
+	for (int i = 0; i < 2; ++i) {
+		printf("%d: original width = %d ; height = %d\n", i, videoDev->getWidth(), videoDev->getHeight());
+		__img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, converted[i]);
+	}
+
+	while(1) {
+		struct videoStreamBuffer __bl, __br;
+		videoDev->grabOneFrame();
+		videoDev->getBuffers(&__bl, &__br);
+
+
+		mjpeg2rgb((char*)__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);
+		mjpeg2rgb((char*)__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[1]);
+		imshow("left", __img[0]);
+		imshow("right", __img[1]);
+		waitKey(10);
+	}
 
 	double exec_time;
 	mouse_selected = Rect();
@@ -406,10 +432,8 @@ int main(int, char**)
 	v4l2_init(0, "/dev/video0");
 	v4l2_init(1, "/dev/video1");
 
-	namedWindow("left", WINDOW_NORMAL);
-	setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
-	//namedWindow("right", 1);
-	//namedWindow("raw_disp", 0);
+
+	//setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
 	setMouseCallback("left", mouse_callback, &raw_disp);
 	Mat img[2];
 	Mat left_gray, right_gray;
@@ -474,16 +498,7 @@ int main(int, char**)
 		cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
 		//morphological opening (remove small objects from the foreground)
-		erode(imgThresholded, imgThresholded,
-				getStructuringElement(MORPH_ELLIPSE, Size(MORPH_FILTER_DX, MORPH_FILTER_DY)));
-		dilate(imgThresholded, imgThresholded,
-				getStructuringElement(MORPH_ELLIPSE, Size(MORPH_FILTER_DX, MORPH_FILTER_DY)));
-
-		//morphological closing (fill small holes in the foreground)
-		dilate(imgThresholded, imgThresholded,
-				getStructuringElement(MORPH_ELLIPSE, Size(MORPH_FILTER_DX, MORPH_FILTER_DY)));
-		erode(imgThresholded, imgThresholded,
-				getStructuringElement(MORPH_ELLIPSE, Size(MORPH_FILTER_DX, MORPH_FILTER_DY)));
+		morphological_filter(imgThresholded);
 		findContours(imgThresholded, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
 		//imshow("th", imgThresholded);
 
@@ -503,7 +518,6 @@ int main(int, char**)
 
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Contours Time: %lf s\n", exec_time);
-#ifndef DUMMY_DEPTH_CALCULATION
 		exec_time = (double) getTickCount();
 		GaussianBlur(left_rect, left_rect, Size(7, 7), 1.5, 1.5);
 		GaussianBlur(right_rect, right_rect, Size(7, 7), 1.5, 1.5);
@@ -537,7 +551,6 @@ int main(int, char**)
 		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Reproject Time: %lf s\n", exec_time);
-#endif
 		calculate_depth(xyz, img_rectified, b_roi, mc);
 		b_roi.clear();
 		imshow("left", img_rectified);

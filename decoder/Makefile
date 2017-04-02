@@ -1,0 +1,1 @@
+obj-y += mjpeg-decoder-sw.o

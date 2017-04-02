@@ -1,0 +1,27 @@
+include Makefile.include
+
+ifeq ($(obj),)
+	$(error error: wrong Build Makefile call, please specify obj)
+endif
+
+include $(obj)Makefile
+
+mod_obj := $(addprefix $(obj),$(obj-y))
+
+.PHONY: _all _clean
+
+_all: $(mod_obj)
+
+_clean:
+	@echo [RM] $(obj)
+	@rm -f $(obj)*.o $(obj)*.d
+
+$(obj)%.o: $(obj)%.cpp
+	@echo "[CC] $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(obj)%.d : ;
+
+.PRECIOUS: $(obj)%.d
+
+-include $(obj)$(obj-y:.o=.d)
