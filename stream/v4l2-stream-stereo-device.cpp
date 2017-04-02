@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void V4LStereoStreamDevice::initialize_v4l2_device(std::string dev_name, int* fd, struct v4l2_buffer* buf_info,  struct v4l2_capability* caps, char** buff, int width, int height)
+void V4LStreamStereoDevice::initialize_v4l2_device(std::string dev_name, int* fd, struct v4l2_buffer* buf_info,  struct v4l2_capability* caps, char** buff, int width, int height)
 {
 	struct v4l2_format format;
 	struct v4l2_requestbuffers bufrequest;
@@ -97,19 +97,19 @@ void V4LStereoStreamDevice::initialize_v4l2_device(std::string dev_name, int* fd
 	}
 }
 
-V4LStereoStreamDevice::V4LStereoStreamDevice(std::__cxx11::string vdev_right, std::__cxx11::string vdev_left, int width, int height)
+V4LStreamStereoDevice::V4LStreamStereoDevice(std::__cxx11::string vdev_right, std::__cxx11::string vdev_left, int width, int height)
 {
 	initialize_v4l2_device(vdev_right, &fd_right, &bufferinfo_right, &cap_right, &buffer_right, width, height);
 	initialize_v4l2_device(vdev_left, &fd_left, &bufferinfo_left, &cap_left, &buffer_left, width, height);
 }
 
-V4LStereoStreamDevice::~V4LStereoStreamDevice()
+V4LStreamStereoDevice::~V4LStreamStereoDevice()
 {
 	close(fd_left);
 	close(fd_right);
 }
 
-int V4LStereoStreamDevice::grabOneFrame()
+int V4LStreamStereoDevice::grabOneFrame()
 {
 	if (ioctl(fd_left, VIDIOC_QBUF, &bufferinfo_left) < 0) {
 		printf("VIDIOC_QBUF error %d\n", errno);
@@ -132,7 +132,7 @@ int V4LStereoStreamDevice::grabOneFrame()
 	return 0;
 }
 
-int V4LStereoStreamDevice::connectToDevice()
+int V4LStreamStereoDevice::connectToDevice()
 {
 	return 0;
 }

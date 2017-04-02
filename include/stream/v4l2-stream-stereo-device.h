@@ -21,11 +21,11 @@
 #include <string.h>
 #include "video-stream-stereo-device.h"
 
-class V4LStereoStreamDevice : public VideoStreamStereoDevice
+class V4LStreamStereoDevice : public VideoStreamStereoDevice
 {
 public:
-    V4LStereoStreamDevice(std::string vdev_right = "/dev/video0", std::string vdev_left = "/dev/video1", int width = 640, int height = 480);
-    ~V4LStereoStreamDevice();
+    V4LStreamStereoDevice(std::string vdev_right = "/dev/video0", std::string vdev_left = "/dev/video1", int width = 640, int height = 480);
+    ~V4LStreamStereoDevice();
     int grabOneFrame();
     int connectToDevice();
 private:

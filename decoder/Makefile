@@ -1,1 +1,1 @@
-obj-y += mjpeg-decoder-sw.o
+obj-y += mjpeg-decoder-sw.o decoder.o

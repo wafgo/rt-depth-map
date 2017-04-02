@@ -28,9 +28,10 @@
 #include <fcntl.h>
 #include "math.h"
 #include "debug.h"
-#include "decoder/mjpeg.h"
+#include "decoder/mjpeg-decoder-sw.h"
 #include "filter/morphological_filter.h"
 #include "stream/v4l2-stream-stereo-device.h"
+#include "decoder/mjpeg-decoder-sw.h"
 
 using namespace cv;
 using namespace std;
@@ -52,19 +53,13 @@ using namespace cv::ximgproc;
 
 #define BM_TYPE		BM
 
-struct v4l2_capability cap[2];
-int fd[2];
-char* buffer[2];
-int width[2], height[2];
-struct v4l2_buffer bufferinfo[2];
 Rect mouse_selected;
 
 #ifdef ENABLE_POST_FILTER
 Ptr<DisparityWLSFilter> wls_filter;
 #endif
 
-char* converted[2];
-static bool new_roi_available = false;
+static char* converted[2];
 static int iLowH = 0;
 static int iHighH = 9;
 static int iLowS = 69;
@@ -72,146 +67,6 @@ static int iHighS = 255;
 static int iLowV = 0;
 static int iHighV = 255;
 
-enum roi_capture_state
-{
-	WAIT_FOR_START_POINT, WAIT_FOR_END_POINT, WAIT_FOR_UNLOCK,
-
-};
-
-static void mouse_callback(int event, int x, int y, int flags, void* cookie)
-{
-	static int cap_state = WAIT_FOR_START_POINT;
-	Mat* disp = (Mat*) cookie;
-
-	switch (cap_state) {
-	case WAIT_FOR_START_POINT:
-		if (event == EVENT_LBUTTONDOWN) {
-			mouse_selected.x = x;
-			mouse_selected.y = y;
-			cap_state = WAIT_FOR_END_POINT;
-			debug("captured start point at x = %d y = %d\n", x, y);
-		}
-		break;
-	case WAIT_FOR_END_POINT:
-		if (event == EVENT_LBUTTONUP) {
-			mouse_selected.width = abs(x - mouse_selected.x);
-			mouse_selected.height = abs(y - mouse_selected.y);
-
-			if (x < mouse_selected.x) {
-				mouse_selected.x = x;
-			}
-			if (y < mouse_selected.y) {
-				mouse_selected.y = y;
-			}
-			new_roi_available = true;
-			debug("captured roi at x = %d y = %d with width = %d and height %d\n", mouse_selected.x, mouse_selected.y,
-					mouse_selected.width, mouse_selected.height);
-			cap_state = WAIT_FOR_UNLOCK;
-		}
-		break;
-	case WAIT_FOR_UNLOCK:
-		if (!new_roi_available)
-			cap_state = WAIT_FOR_START_POINT;
-		break;
-	default:
-		printf("invalid state %d. Mouse callback called with event %d, x = %d, y = %d, flags = %d\n", cap_state, event,
-				x, y, flags);
-		break;
-	}
-
-	debug("mouse callback called with event %d, x = %d, y = %d, flags = %d\n", event, x, y, flags);
-}
-
-static void v4l2_init(int i, const char* dev_name)
-{
-	struct v4l2_format format;
-	struct v4l2_requestbuffers bufrequest;
-
-	if ((fd[i] = open(dev_name, O_RDWR)) < 0) {
-		perror("open");
-		return;
-	}
-
-	if (ioctl(fd[i], VIDIOC_QUERYCAP, &cap) < 0) {
-		perror("VIDIOC_QUERYCAP");
-		exit(1);
-	}
-
-	if ((cap[i].capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-		cout << "The device can handle single-planar video capture.\n" << endl;
-	}
-
-	if ((cap[i].capabilities & V4L2_CAP_STREAMING)) {
-		cout << "The device can stream.\n" << endl;
-	}
-
-	if ((cap[i].capabilities & V4L2_CAP_READWRITE)) {
-		cout << "The device can handle read/write syscalls.\n" << endl;
-	}
-
-	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
-	format.fmt.pix.width = IMG_WIDTH;
-	format.fmt.pix.height = IMG_HEIGHT;
-
-	if (ioctl(fd[i], VIDIOC_S_FMT, &format) < 0) {
-		perror("VIDIOC_S_FMT");
-		cout << "Cold not open correct format.\n" << endl;
-		return;
-	}
-
-	width[i] = format.fmt.pix.width;
-	height[i] = format.fmt.pix.height;
-
-	converted[i] = (char*) malloc(width[i] * height[i] * 3);
-
-	if (!converted[i])
-		cout << "could not alloc mem" << endl;
-
-	bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	bufrequest.memory = V4L2_MEMORY_MMAP;
-	bufrequest.count = 1;
-
-	if (ioctl(fd[i], VIDIOC_REQBUFS, &bufrequest) < 0) {
-		perror("VIDIOC_REQBUFS");
-		return;
-	}
-
-	memset(&bufferinfo[i], 0, sizeof(bufferinfo[i]));
-
-	bufferinfo[i].type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	bufferinfo[i].memory = V4L2_MEMORY_MMAP;
-	bufferinfo[i].index = 0;
-
-	if (ioctl(fd[i], VIDIOC_QUERYBUF, &bufferinfo[i]) < 0) {
-		perror("VIDIOC_QUERYBUF");
-		return;
-	}
-
-	buffer[i] = (char*) mmap(
-	NULL, bufferinfo[i].length,
-	PROT_READ | PROT_WRITE,
-	MAP_SHARED, fd[i], bufferinfo[i].m.offset);
-
-	if (buffer[i] == MAP_FAILED) {
-		perror("mmap");
-		return;
-	}
-
-	memset(buffer[i], 0, bufferinfo[i].length);
-
-	memset(&bufferinfo[i], 0, sizeof(bufferinfo[i]));
-
-	bufferinfo[i].type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	bufferinfo[i].memory = V4L2_MEMORY_MMAP;
-	bufferinfo[i].index = 0;
-
-	int type = bufferinfo[i].type;
-	if (ioctl(fd[i], VIDIOC_STREAMON, &type) < 0) {
-		cout << "VIDIOC_STREAMON" << " " << errno << endl;
-		return;
-	}
-}
 
 #define MIN_DISP_VALS		100
 
@@ -219,8 +74,6 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 {
 	Mat tmp_xyz;
 	region.push_back(mouse_selected);
-
-	new_roi_available = false;
 
 	for (int i = 0; i < region.size(); ++i) {
 		Rect* reg = &region[i];
@@ -304,7 +157,6 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 					Scalar(255, 255, 255), 1, LINE_8);
 		//}
 	}
-	new_roi_available = false;
 	return 0.0f;
 }
 
@@ -363,29 +215,9 @@ int main(int, char**)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat img_rectified;
-	VideoStreamStereoDevice* videoDev = new V4LStereoStreamDevice("/dev/video0", "/dev/video1", IMG_WIDTH, IMG_HEIGHT);
-	Mat __img[2];
-	converted[0] = (char*) malloc(videoDev->getWidth() * videoDev->getHeight() * 3);
-	converted[1] = (char*) malloc(videoDev->getWidth() * videoDev->getHeight() * 3);
-	namedWindow("left", WINDOW_NORMAL);
-	for (int i = 0; i < 2; ++i) {
-		printf("%d: original width = %d ; height = %d\n", i, videoDev->getWidth(), videoDev->getHeight());
-		__img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, converted[i]);
-	}
-
-	while(1) {
-		struct videoStreamBuffer __bl, __br;
-		videoDev->grabOneFrame();
-		videoDev->getBuffers(&__bl, &__br);
-
-
-		mjpeg2rgb((char*)__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);
-		mjpeg2rgb((char*)__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[1]);
-		imshow("left", __img[0]);
-		imshow("right", __img[1]);
-		waitKey(10);
-	}
-
+	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice("/dev/video1", "/dev/video0", IMG_WIDTH, IMG_HEIGHT);
+	MJPEGDecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
+	
 	double exec_time;
 	mouse_selected = Rect();
 #if BM_TYPE == BM
@@ -429,20 +261,17 @@ int main(int, char**)
 	left_matcher->setDisp12MaxDiff(1);
 #endif
 
-	v4l2_init(0, "/dev/video0");
-	v4l2_init(1, "/dev/video1");
-
-
 	//setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
-	setMouseCallback("left", mouse_callback, &raw_disp);
 	Mat img[2];
 	Mat left_gray, right_gray;
 	Mat right_disp, filtered_disparity_map;
 
 	for (int i = 0; i < 2; ++i) {
+		converted[i] = new char[videoDev->getHeight() * videoDev->getWidth() * 3];
 		debug("%d: original width = %d ; height = %d\n", i, width[i], height[i]);
-		img[i] = Mat(height[i], width[i], CV_8UC3, converted[i]);
+		img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, converted[i]);
 	}
+
 
 	debug("after roi width = %d, height = %d\n", roif.width, roif.height);
 
@@ -451,27 +280,13 @@ int main(int, char**)
 		Mat imgThresholded;
 		vector<Rect> b_roi;
 
-		if (ioctl(fd[0], VIDIOC_QBUF, &bufferinfo[0]) < 0) {
-			printf("VIDIOC_QBUF error %d\n", errno);
-			break;
-		}
-		if (ioctl(fd[1], VIDIOC_QBUF, &bufferinfo[1]) < 0) {
-			printf("VIDIOC_QBUF error %d\n", errno);
-			break;
-		}
-
-		if (ioctl(fd[0], VIDIOC_DQBUF, &bufferinfo[0]) < 0) {
-			printf("VIDIOC_DQBUF error %d\n", errno);
-			break;
-		}
-		if (ioctl(fd[1], VIDIOC_DQBUF, &bufferinfo[1]) < 0) {
-			printf("VIDIOC_DQBUF error %d\n", errno);
-			break;
-		}
+		struct videoStreamBuffer __bl, __br;
+		videoDev->grabOneFrame();
+		videoDev->getBuffers(&__bl, &__br);
 
 		exec_time = (double) getTickCount();
-		mjpeg2rgb(buffer[0], bufferinfo[0].bytesused, width[0], height[0], converted[0]);
-		mjpeg2rgb(buffer[1], bufferinfo[1].bytesused, width[1], height[1], converted[1]);
+		mjpegDecoder->decode(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);//(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), converted[0]);
+		mjpegDecoder->decode(__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), converted[1]);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Jpeg2RGB Time: %lf s\n", exec_time);
 

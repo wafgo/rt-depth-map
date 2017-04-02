@@ -4,23 +4,12 @@
  *  Created on: 01.02.2017
  *      Author: wadim mueller
  */
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <jpeglib.h>
-#include <setjmp.h>
+#include "decoder/mjpeg-decoder-sw.h"
 
 struct error_mgr {
   struct jpeg_error_mgr super;
   jmp_buf jmp;
 };
-
-static void _error_exit(j_common_ptr dinfo) {
-  struct error_mgr *myerr = (struct error_mgr *)dinfo->err;
-  (*dinfo->err->output_message)(dinfo);
-  longjmp(myerr->jmp, 1);
-}
 
 /* ISO/IEC 10918-1:1993(E) K.3.3. Default Huffman tables used by MJPEG UVC devices
    which don't specify a Huffman table in the JPEG stream. */
@@ -84,14 +73,30 @@ static const unsigned char ac_chromi_val[] =
   memcpy(dinfo->tbl->huffval, name##_val, sizeof(name##_val)); \
 } while(0)
 
-static void insert_huff_tables(j_decompress_ptr dinfo) {
+static void _error_exit(j_common_ptr dinfo) {
+  struct error_mgr *myerr = (struct error_mgr *)dinfo->err;
+  (*dinfo->err->output_message)(dinfo);
+  longjmp(myerr->jmp, 1);
+}
+
+MJPEGDecoderDevice::MJPEGDecoderDevice()
+{
+
+}
+
+void MJPEGDecoderDevice::insert_huff_tables(j_decompress_ptr dinfo) {
   COPY_HUFF_TABLE(dinfo, dc_huff_tbl_ptrs[0], dc_lumi);
   COPY_HUFF_TABLE(dinfo, dc_huff_tbl_ptrs[1], dc_chromi);
   COPY_HUFF_TABLE(dinfo, ac_huff_tbl_ptrs[0], ac_lumi);
   COPY_HUFF_TABLE(dinfo, ac_huff_tbl_ptrs[1], ac_chromi);
 }
 
-int mjpeg2rgb(char *in, int len, int width, int height, char *out) {
+int  MJPEGDecoderDevice::decode(char* in, int len, int width, int height, char* out)
+{
+	return mjpeg2rgb(in, len, width, height, out);
+}
+
+int MJPEGDecoderDevice::mjpeg2rgb(char *in, int len, int width, int height, char *out) {
   struct jpeg_decompress_struct dinfo;
   struct error_mgr jerr;
   size_t lines_read;
