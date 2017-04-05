@@ -29,6 +29,8 @@ public:
 			int textureThreshold, int numOfDisparities, int maxDisparity, int uniquenessRatio, int speckleWindowSize,
 			int speckleRange, int disp12MaxDiff);
 	~SWMatcherKonolige();
+	void setROI1(cv::Rect roi1);
+	void setROI2(cv::Rect roi2);
 	int compute(InputArray left, InputArray right, OutputArray out);
 private:
 	cv::Ptr<cv::StereoBM> matcher;

@@ -38,3 +38,13 @@ int SWMatcherKonolige::compute(InputArray left, InputArray right, OutputArray ou
 
 	return 0;
 }
+
+void SWMatcherKonolige::setROI1(cv::Rect roi1)
+{
+	matcher->setROI1(roi1);
+}
+
+void SWMatcherKonolige::setROI2(cv::Rect roi2)
+{
+	matcher->setROI2(roi2);
+}

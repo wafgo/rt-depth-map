@@ -18,38 +18,33 @@
 #include <iomanip>
 #include "debug.h"
 #include "decoder/mjpeg-decoder-sw.h"
-#include "filter/morphological_filter.h"
 #include "stream/v4l2-stream-stereo-device.h"
 #include "decoder/mjpeg-decoder-sw.h"
+#include "include/filter/mf-sw.h"
 #include "stereo-matcher/bm-sw.h"
+#include "stereo-matcher/sgbm-sw.h"
+#include "stereo-matcher/bm-hw-ip.h"
+#include "filter/mf-sw.h"
+#include "filter/mf-hw-ip.h"
 
 using namespace cv;
 using namespace std;
 using namespace cv::ximgproc;
 
-#define NUM_DISPARITIES		(64*4)
+//#define ENABLE_POST_FILTER
+#define NUM_DISPARITIES		(64 * 3)
 #define IMG_WIDTH			1280
 #define IMG_HEIGHT			720
 
-#define CALIB_UNIT_MM	25.0
-
-//#define ENABLE_POST_FILTER
+#define CALIB_UNIT_MM		25.0
 
 #define MORPH_FILTER_DX		10
 #define MORPH_FILTER_DY		10
-
-#define BM			0
-#define SGBM		1
-
-#define BM_TYPE		BM
-
-Rect mouse_selected;
 
 #ifdef ENABLE_POST_FILTER
 Ptr<DisparityWLSFilter> wls_filter;
 #endif
 
-static char* rgb[2];
 static int iLowH = 0;
 static int iHighH = 9;
 static int iLowS = 69;
@@ -57,13 +52,11 @@ static int iHighS = 255;
 static int iLowV = 0;
 static int iHighV = 255;
 
-
 #define MIN_DISP_VALS		100
 
-static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Point2f> center_of_object)
+static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region)
 {
 	Mat tmp_xyz;
-	region.push_back(mouse_selected);
 
 	for (int i = 0; i < region.size(); ++i) {
 		Rect* reg = &region[i];
@@ -71,11 +64,7 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 		if (reg->area() < MIN_DISP_VALS)
 			continue;
 
-		double aspect_ratio = (double) reg->width / (double) reg->height;
-		Point2f* center = &center_of_object[i];
-		Rect disparity_calculation_region;
 		double res = 0.0;
-		double x, y, w, h;
 		int cnt = 0;
 		const double max_z = 1.0e4;
 		ostringstream distance_text;
@@ -94,58 +83,13 @@ static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region, vector<Poin
 				cnt++;
 			}
 		}
-#if 0
-		/* note the aspect ratio */
-		h = max<double>(1.0, reg->height / 10.0);
-		w = aspect_ratio * h;
 
-		while (cnt < MIN_DISP_VALS) {
-			if (w >= reg->width || h >= reg->height)
-				break;
+		if (cnt > 0)
+			res = res / cnt;
 
-			x = (double) center->x - (w / 2.0);
-			y = (double) center->y - (h / 2.0);
-			disparity_calculation_region.width = (int) w;
-			disparity_calculation_region.height = (int) h;
-			disparity_calculation_region.x = (int) x;
-			disparity_calculation_region.y = (int) y;
-
-			try {
-				tmp_xyz = xyz(disparity_calculation_region);
-			} catch (const exception& e) {
-				cout << "exeception caught" << e.what() << endl;
-				break;
-			}
-			for (int y = 0; y < tmp_xyz.rows; y++) {
-				for (int x = 0; x < tmp_xyz.cols; x++) {
-					Vec3f point = tmp_xyz.at<Vec3f>(y, x);
-					if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z)
-						continue;
-					res += point[2];
-					cnt++;
-				}
-			}
-			if (cnt < MIN_DISP_VALS) {
-				h = h + 1.0;
-				w += aspect_ratio;
-			}
-
-		}
-		if (cnt >= MIN_DISP_VALS) {
-#ifdef DEBUG
-			rectangle(img, Point(disparity_calculation_region.x, disparity_calculation_region.y),
-					Point(disparity_calculation_region.x + disparity_calculation_region.width,
-							disparity_calculation_region.y + disparity_calculation_region.height),
-					Scalar(255, 255, 255), 1, LINE_8);
-#endif
-#endif
-			if (cnt > 0)
-				res = res / cnt;
-
-			distance_text << std::fixed << setprecision(1) << res * CALIB_UNIT_MM / 10.0 << " cm";
-			putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
-					Scalar(255, 255, 255), 1, LINE_8);
-		//}
+		distance_text << std::fixed << setprecision(1) << res * CALIB_UNIT_MM / 10.0 << " cm";
+		putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
+				Scalar(255, 255, 255), 1, LINE_8);
 	}
 	return 0.0f;
 }
@@ -194,6 +138,9 @@ int main(int, char**)
 {
 	Rect roif;
 	Mat Q;
+	char* rgb[2];
+	double exec_time;
+	Mat filter_in, filter_out;
 	Size imgSize;
 	Mat remap_left1, remap_left2, remap_right1, remap_right2;
 	Mat left_rect, right_rect;
@@ -203,16 +150,9 @@ int main(int, char**)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat img_rectified;
-	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice("/dev/video1", "/dev/video0", IMG_WIDTH, IMG_HEIGHT);
-	MJPEGDecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
-	
-	double exec_time;
-	mouse_selected = Rect();
-#if BM_TYPE == BM
 
-#elif BM_TYPE == SGBM
-	Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, numberOfDisparities, 9);
-#endif
+	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice("/dev/video1", "/dev/video0", IMG_WIDTH, IMG_HEIGHT);
+	DecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
 
 #ifdef ENABLE_POST_FILTER
 	Ptr<StereoMatcher> right_matcher = createRightMatcher(left_matcher);
@@ -220,26 +160,25 @@ int main(int, char**)
 #ifdef ENABLE_POST_FILTER
 	wls_filter = createDisparityWLSFilter(left_matcher);
 #endif
+
 	imgSize.width = IMG_WIDTH;
 	imgSize.height = IMG_HEIGHT;
 
 	get_rectified_remap_matrices("intrinsics.yml", "extrinsics.yml", imgSize, remap_left1, remap_left2, remap_right1,
 			remap_right2, Q, &roif);
 
-	SWMatcherKonolige* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, numberOfDisparities, numberOfDisparities, 10, 100, 32, 1);
-#if BM_TYPE == SGBM
-	left_matcher->setP1(8 * 3 * 5 * 5);
-	left_matcher->setP2(32 * 3 * 5 * 5);
-	left_matcher->setMinDisparity(0);
-	left_matcher->setNumDisparities(numberOfDisparities);
-	left_matcher->setUniquenessRatio(10);
-	left_matcher->setSpeckleWindowSize(100);
-	left_matcher->setSpeckleRange(32);
-	left_matcher->setDisp12MaxDiff(1);
-#elif BM_TYPE == BM
-
+	SWMatcherKonolige* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, numberOfDisparities,
+			numberOfDisparities, 10, 100, 32, 1);
+#ifdef __ZYNQ__
+	VideoFilterDevice* morphFilter = new HWMorphologicalFilterIPCore(roif.width, roif.height, 8);
+#else
+	VideoFilterDevice* morphFilter = new SWMorphologicalFilter(roif.width, roif.height, 8);
 #endif
 
+	/* SGBM Version*/
+	//SWSemiGlobalMatcher* matcher = new SWSemiGlobalMatcher(9, 0, numberOfDisparities, 10, 100, 32, 1);
+	/* Disparity Coprocessor Version */
+	//HWMatcherDisparityCoprocessor* matcher = new HWMatcherDisparityCoprocessor("disp-coproc", IMG_WIDTH, IMG_HEIGHT);
 	//setWindowProperty("left", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
 	Mat img[2];
 	Mat left_gray, right_gray;
@@ -247,10 +186,12 @@ int main(int, char**)
 
 	for (int i = 0; i < 2; ++i) {
 		rgb[i] = new char[videoDev->getHeight() * videoDev->getWidth() * 3];
-		debug("%d: original width = %d ; height = %d\n", i, width[i], height[i]);
+		debug("%d: original width = %d ; height = %d\n", i, videoDev->getWidth(), videoDev->getHeight());
 		img[i] = Mat(videoDev->getHeight(), videoDev->getWidth(), CV_8UC3, rgb[i]);
 	}
 
+	filter_in = Mat(roif.height, roif.width, CV_8UC1, morphFilter->getVideoInBuffer());
+	filter_out = Mat(roif.height, roif.width, CV_8UC1, morphFilter->getVideoOutBuffer());
 
 	debug("after roi width = %d, height = %d\n", roif.width, roif.height);
 
@@ -258,71 +199,46 @@ int main(int, char**)
 		Mat imgHSV;
 		Mat imgThresholded;
 		vector<Rect> b_roi;
+		struct videoStreamBuffer videoBufferLeft, videoBufferRight;
 
-		struct videoStreamBuffer __bl, __br;
+		exec_time = (double) getTickCount();
 		videoDev->grabOneFrame();
-		videoDev->getBuffers(&__bl, &__br);
+		videoDev->getBuffers(&videoBufferLeft, &videoBufferRight);
 
-		exec_time = (double) getTickCount();
-		mjpegDecoder->decode(__bl.data, __bl.len, videoDev->getWidth(), videoDev->getHeight(), rgb[0]);
-		mjpegDecoder->decode(__br.data, __br.len, videoDev->getWidth(), videoDev->getHeight(), rgb[1]);
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Jpeg2RGB Time: %lf s\n", exec_time);
+		mjpegDecoder->decode(videoBufferLeft.data, videoBufferLeft.len, videoDev->getWidth(), videoDev->getHeight(),
+				rgb[0]);
+		mjpegDecoder->decode(videoBufferRight.data, videoBufferRight.len, videoDev->getWidth(), videoDev->getHeight(),
+				rgb[1]);
 
-		exec_time = (double) getTickCount();
 		cvtColor(img[0], left_gray, CV_RGB2GRAY);
 		cvtColor(img[1], right_gray, CV_RGB2GRAY);
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("cvtColor Time: %lf s\n", exec_time);
 
-		exec_time = (double) getTickCount();
 		remap(left_gray, left_rect, remap_left1, remap_left2, INTER_LINEAR);
 		left_rect = left_rect(roif);
 
 		remap(right_gray, right_rect, remap_right1, remap_right2, INTER_LINEAR);
 		right_rect = right_rect(roif);
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("remap Time: %lf s\n", exec_time);
 
 		remap(img[0], img_rectified, remap_left1, remap_left2, INTER_LINEAR);
 		img_rectified = img_rectified(roif);
 
 		cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR);
-		exec_time = (double) getTickCount();
 		cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), filter_in); //Threshold the image
 
-		morphological_filter(imgThresholded);
-
-		findContours(imgThresholded, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
-
-		vector<Point2f> mc(contours.size());
+		morphFilter->run(filter_in, filter_out);
+		findContours(filter_out, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
 
 		for (int i = 0; i < contours.size(); i++) {
-			Moments mu = moments(contours[i], true);
-			mc[i] = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 			Rect br = boundingRect(Mat(contours[i]));
 			Mat mask;
-			drawContours(mask, contours, i,  Scalar(255));
-			Scalar mv = mean(imgThresholded(br), mask);
-			if ( mv.val[0] >= 120 )
+			drawContours(mask, contours, i, Scalar(255));
+			Scalar mv = mean(filter_out(br), mask);
+			if (mv.val[0] >= 120)
 				b_roi.push_back(br);
-			//circle(img_rectified, mc[i], 4, Scalar(255, 255, 255), -1, 8, 0);
 		}
 
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Contours Time: %lf s\n", exec_time);
-		exec_time = (double) getTickCount();
-		GaussianBlur(left_rect, left_rect, Size(7, 7), 1.5, 1.5);
-		GaussianBlur(right_rect, right_rect, Size(7, 7), 1.5, 1.5);
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Gaussian Blur Time: %lf s\n", exec_time);
-
-		exec_time = (double) getTickCount();
-
 		matcher->compute(left_rect, right_rect, left_disp);
-		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Matching Time: %lf s\n", exec_time);
 #ifdef ENABLE_POST_FILTER
 		right_matcher->compute(right_rect,left_rect, right_disp);
 
@@ -337,18 +253,14 @@ int main(int, char**)
 
 		imshow("disp", filtered_disp_vis);
 #endif
-	//	getDisparityVis(left_disp, raw_disp);
 
 		left_disp /= 16.;
 
-		exec_time = (double) getTickCount();
 		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
+		calculate_depth(xyz, img_rectified, b_roi);
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
-		debug("Reproject Time: %lf s\n", exec_time);
-		calculate_depth(xyz, img_rectified, b_roi, mc);
-		b_roi.clear();
+		debug("Overall Time: %lf s\n", exec_time);
 		imshow("left", img_rectified);
-		//imshow("raw_disp", raw_disp);
 		waitKey(10);
 	}
 

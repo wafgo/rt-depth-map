@@ -7,9 +7,9 @@ BUILD_MAKEFILE := Makefile.build
 SUBMAKE_ARGS := --no-print-directory
 
 ifeq ($(CROSS_COMPILE),)
-CFLAGS += -Iinclude -I/usr/local/include/opencv -I/usr/local/include -L/usr/local/lib -g3 -MMD
+CFLAGS += -std=c++11 -Iinclude -I/usr/local/include/opencv -I/usr/local/include -L/usr/local/lib -g3 -MMD
 else
-CFLAGS += --sysroot=$(SYSROOT) -Iinclude -I$(SYSROOT)/usr/include/opencv -I$(SYSROOT)/usr/include -L$(SYSROOT)/usr/lib -march=armv7-a -mfloat-abi=hard -mcpu=cortex-a9
+CFLAGS += -std=c++11 -D__ZYNQ__ --sysroot=$(SYSROOT) -Iinclude -I$(SYSROOT)/usr/include/opencv -I$(SYSROOT)/usr/include -L$(SYSROOT)/usr/lib -march=armv7-a -mfloat-abi=hard -mcpu=cortex-a9
 endif
 
 LIBS += -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired \

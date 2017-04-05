@@ -2,13 +2,13 @@
  * debug.h
  *
  *  Created on: 08.02.2017
- *      Author: sefo
+ *      Author: wadim mueller
  */
 
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define debug(fmt, ...) printf(fmt, ##__VA_ARGS__)

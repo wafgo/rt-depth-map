@@ -8,13 +8,17 @@
 #ifndef INCLUDE_MORPHOLOGICAL_FILTER_H_
 #define INCLUDE_MORPHOLOGICAL_FILTER_H_
 
-#include "opencv2/opencv.hpp"
-
 #define MORPH_FILTER_DX		10
 #define MORPH_FILTER_DY		10
 
-using namespace cv;
+#include "filter/filter.h"
+#include "opencv2/opencv.hpp"
 
-void morphological_filter(Mat imgThresholded);
+class SWMorphologicalFilter: public VideoFilterDevice
+{
+public:
+	explicit SWMorphologicalFilter(int w, int h, int bpp);
+    int run(cv::InputArray in, cv::OutputArray out);
+};
 
 #endif /* INCLUDE_MORPHOLOGICAL_FILTER_H_ */
