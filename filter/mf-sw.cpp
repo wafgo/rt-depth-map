@@ -9,10 +9,8 @@
 
 SWMorphologicalFilter::SWMorphologicalFilter(int w, int h, int bpp)
 {
-	if (!video_in)
-		video_in = new char[w * h * (bpp >> 3)];
-	if (!video_out)
-		video_out = new char[w * h * (bpp >> 3)];
+	video_in = new char[w * h * (bpp >> 3)];
+	video_out = new char[w * h * (bpp >> 3)];
 	img_width = w;
 	img_height = h;
 	img_bpp = bpp;

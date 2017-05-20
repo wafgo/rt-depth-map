@@ -4,7 +4,7 @@
 # currently i am not able to build relocatable files in the subdirs with g++ -r, thats the reason i need to search all objects via find
 include Makefile.include
 
-subdirs := filter/ decoder/ stereo-matcher/ stream/
+subdirs := filter/ decoder/ stereo-matcher/ stream/ utils/
 clean_subdirs := $(addsuffix __clean,$(subdirs))
 
 obj-y += main.o

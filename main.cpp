@@ -11,7 +11,6 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/core/utility.hpp"
-#include "opencv2/ximgproc/disparity_filter.hpp"
 #include <iostream>
 #include <string.h>
 #include "math.h"
@@ -19,27 +18,27 @@
 #include "debug.h"
 #include "decoder/mjpeg-decoder-sw.h"
 #include "stream/v4l2-stream-stereo-device.h"
-#include "decoder/mjpeg-decoder-sw.h"
 #include "include/filter/mf-sw.h"
 #include "stereo-matcher/bm-sw.h"
 #include "stereo-matcher/sgbm-sw.h"
 #include "stereo-matcher/bm-hw-ip.h"
 #include "filter/mf-sw.h"
 #include "filter/mf-hw-ip.h"
+#include "utils/cmdline-parser.h"
+#include "opencv2/ximgproc/disparity_filter.hpp"
+
+//#define ENABLE_POST_FILTER
+//#define SHOW_DISPARITY_MAP
+//#define SHOW_DISPARITY_VALUE
+//#define ADJUSTABLE_HSV_VALUES
 
 using namespace cv;
 using namespace std;
 using namespace cv::ximgproc;
 
-//#define ENABLE_POST_FILTER
-#define NUM_DISPARITIES		(64 * 3)
-#define IMG_WIDTH			1280
-#define IMG_HEIGHT			720
+#define NUM_DISPARITIES		(32 * 4)
 
 #define CALIB_UNIT_MM		25.0
-
-#define MORPH_FILTER_DX		10
-#define MORPH_FILTER_DY		10
 
 #ifdef ENABLE_POST_FILTER
 Ptr<DisparityWLSFilter> wls_filter;
@@ -47,51 +46,86 @@ Ptr<DisparityWLSFilter> wls_filter;
 
 static int iLowH = 0;
 static int iHighH = 9;
-static int iLowS = 69;
+static int iLowS = 150;
 static int iHighS = 255;
 static int iLowV = 0;
 static int iHighV = 255;
 
 #define MIN_DISP_VALS		100
 
-static float calculate_depth(Mat xyz, Mat img, vector<Rect>& region)
+static void set_label(cv::Mat& im, const std::string label, const cv::Point & origin)
 {
-	Mat tmp_xyz;
+    int fontface = FONT_HERSHEY_SIMPLEX;
+    double scale = 0.4;
+    int thickness = 1;
+    int baseline = 0;
 
-	for (int i = 0; i < region.size(); ++i) {
-		Rect* reg = &region[i];
+    Size text = getTextSize(label, fontface, scale, thickness, &baseline);
+    rectangle(im, origin + Point(0, baseline), origin + Point(text.width, -text.height), CV_RGB(0,0,0), CV_FILLED);
+    putText(im, label, origin, fontface, scale, CV_RGB(255,255,255), thickness, 8);
+}
 
-		if (reg->area() < MIN_DISP_VALS)
+static void calculate_depth(Mat xyz, Mat disparity_map, Mat mask, Mat img, vector<Rect>& regions)
+{
+	Mat xyz_region;
+	Mat mask_region;
+	//Mat mask = Mat::zeros(img.size(), CV_8UC3);
+	ostringstream distance_text;
+#ifdef SHOW_DISPARITY_VALUE
+	Mat tmp_disp_map;
+#endif
+	for(int i = 0 ; i < regions.size(); ++i) {
+		Rect reg = regions[i];
+
+		if (reg.area() < MIN_DISP_VALS)
 			continue;
 
+		//cout << "----> " << mask(reg) << endl;
 		double res = 0.0;
+		double disp_mean = 0.0;
 		int cnt = 0;
 		const double max_z = 1.0e4;
-		ostringstream distance_text;
 
-		rectangle(img, Point(reg->x, reg->y), Point(reg->x + reg->width, reg->y + reg->height), Scalar(255, 255, 255),
-				1, LINE_8);
-
-		tmp_xyz = xyz(*reg);
-
-		for (int y = 0; y < tmp_xyz.rows; y++) {
-			for (int x = 0; x < tmp_xyz.cols; x++) {
-				Vec3f point = tmp_xyz.at<Vec3f>(y, x);
-				if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z)
+		xyz_region = xyz(reg);
+		mask_region = mask(reg);
+#ifdef SHOW_DISPARITY_VALUE
+		tmp_disp_map = disparity_map(*reg);
+#endif
+		for (int y = 0; y < xyz_region.rows; y++) {
+			for (int x = 0; x < xyz_region.cols; x++) {
+				Vec3f point = xyz_region.at<Vec3f>(y, x);
+				Scalar mask_point = mask_region.at<uchar>(Point(x,y));
+#ifdef SHOW_DISPARITY_VALUE
+				uint16_t disp = tmp_disp_map.at<uint16_t>(y, x);
+#endif
+				if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z || mask_point.val[0] == 0)
 					continue;
 				res += point[2];
+#ifdef SHOW_DISPARITY_VALUE
+				disp_mean += disp;
+#endif
 				cnt++;
 			}
 		}
 
-		if (cnt > 0)
+		if (cnt > 0) {
 			res = res / cnt;
+#ifdef SHOW_DISPARITY_VALUE
+			disp_mean = disp_mean / cnt;
+#endif
+			rectangle(img, Point(reg.x, reg.y), Point(reg.x + reg.width, reg.y + reg.height), Scalar(255, 255, 255),
+					1, LINE_8);
+			res	= (res * CALIB_UNIT_MM / 10.0);
+			distance_text.str("");
+			distance_text << std::fixed << setprecision(0) << res << " cm"
+#ifdef SHOW_DISPARITY_VALUE
+			<< " disparity = " << disp_mean
+#endif
+			;
+			set_label(img, distance_text.str(), Point(reg.x, reg.y - 5));
+		}
 
-		distance_text << std::fixed << setprecision(1) << res * CALIB_UNIT_MM / 10.0 << " cm";
-		putText(img, String(distance_text.str().c_str()), Point(reg->x, reg->y - 5), FONT_HERSHEY_SIMPLEX, 0.5,
-				Scalar(255, 255, 255), 1, LINE_8);
 	}
-	return 0.0f;
 }
 
 static int get_rectified_remap_matrices(String intrinsics_file_name, String extrinsics_file_name, Size img_size,
@@ -134,7 +168,46 @@ static int get_rectified_remap_matrices(String intrinsics_file_name, String extr
 	return 0;
 }
 
-int main(int, char**)
+static void create_adjustment_track_bars(void)
+{
+	createTrackbar("hue low", "depth", &iLowH, 255, NULL);
+	createTrackbar("hue high", "depth", &iHighH, 255, NULL);
+
+	createTrackbar("saturation low", "depth", &iLowS, 255, NULL);
+	createTrackbar("saturation high", "depth", &iHighS, 255, NULL);
+
+	createTrackbar("value low", "depth", &iLowV, 255, NULL);
+	createTrackbar("value high", "depth", &iHighV, 255, NULL);
+}
+
+static int find_all_contour_boxes(vector<vector<Point>> &contours, vector<Vec4i>& hierarchy, vector<Rect>& all_bound_boxes, Rect& roi)
+{
+	int max_x = -1e6;
+	int max_y = -1e6;
+	int min_x = 1e6;
+	int min_y = 1e6;
+
+	for(int i = 0 ; i >= 0; i = hierarchy[i][0] ) {
+		Rect reg = boundingRect(Mat(contours[i]));
+		all_bound_boxes.push_back(reg);
+		if (reg.x < min_x)
+			min_x = reg.x;
+		if (reg.y < min_y)
+			min_y = reg.y;
+		if (reg.x + reg.width > max_x)
+			max_x = reg.x + reg.width;
+		if (reg.y + reg.height > max_y)
+			max_y = reg.y + reg.height ;
+	}
+	roi.x = min_x;
+	roi.y = min_y;
+	roi.width = max_x - min_x;
+	roi.height = max_y - min_y;
+
+	return 0;
+}
+
+int main(int argc, char** argv)
 {
 	Rect roif;
 	Mat Q;
@@ -150,19 +223,20 @@ int main(int, char**)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat img_rectified;
+	Mat raw_disp;
 
-	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice("/dev/video1", "/dev/video0", IMG_WIDTH, IMG_HEIGHT);
+	RtDepthMapCmdLineParser parser(argv, argc);
+
+	imgSize.width = parser.getWidth();
+	imgSize.height = parser.getHeight();
+
+	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice("/dev/video1", "/dev/video0", imgSize.width, imgSize.height);
 	DecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
 
 #ifdef ENABLE_POST_FILTER
 	Ptr<StereoMatcher> right_matcher = createRightMatcher(left_matcher);
-#endif
-#ifdef ENABLE_POST_FILTER
 	wls_filter = createDisparityWLSFilter(left_matcher);
 #endif
-
-	imgSize.width = IMG_WIDTH;
-	imgSize.height = IMG_HEIGHT;
 
 	get_rectified_remap_matrices("intrinsics.yml", "extrinsics.yml", imgSize, remap_left1, remap_left2, remap_right1,
 			remap_right2, Q, &roif);
@@ -184,6 +258,12 @@ int main(int, char**)
 	Mat left_gray, right_gray;
 	Mat right_disp, filtered_disparity_map;
 
+	namedWindow("depth", 1);
+	namedWindow("debug", 1);
+
+	if (parser.isAdjustable())
+		create_adjustment_track_bars();
+
 	for (int i = 0; i < 2; ++i) {
 		rgb[i] = new char[videoDev->getHeight() * videoDev->getWidth() * 3];
 		debug("%d: original width = %d ; height = %d\n", i, videoDev->getWidth(), videoDev->getHeight());
@@ -193,12 +273,12 @@ int main(int, char**)
 	filter_in = Mat(roif.height, roif.width, CV_8UC1, morphFilter->getVideoInBuffer());
 	filter_out = Mat(roif.height, roif.width, CV_8UC1, morphFilter->getVideoOutBuffer());
 
-	debug("after roi width = %d, height = %d\n", roif.width, roif.height);
+	debug("undistorted roi width = %d, height = %d\n", roif.width, roif.height);
 
 	for (;;) {
 		Mat imgHSV;
 		Mat imgThresholded;
-		vector<Rect> b_roi;
+		Mat contInput;
 		struct videoStreamBuffer videoBufferLeft, videoBufferRight;
 
 		exec_time = (double) getTickCount();
@@ -225,42 +305,43 @@ int main(int, char**)
 		cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR);
 		cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), filter_in); //Threshold the image
-
 		morphFilter->run(filter_in, filter_out);
-		findContours(filter_out, contours, hierarchy, CV_RETR_FLOODFILL, CV_LINK_RUNS, Point(0, 0));
+		filter_out.copyTo(contInput);
+		findContours(contInput, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+		if (contours.size() > 0) {
+			Rect stereo_calc_roi;
 
-		for (int i = 0; i < contours.size(); i++) {
-			Rect br = boundingRect(Mat(contours[i]));
-			Mat mask;
-			drawContours(mask, contours, i, Scalar(255));
-			Scalar mv = mean(filter_out(br), mask);
-			if (mv.val[0] >= 120)
-				b_roi.push_back(br);
-		}
-
-		matcher->compute(left_rect, right_rect, left_disp);
+			vector<Rect> obj_boundings;
+			find_all_contour_boxes(contours, hierarchy, obj_boundings, stereo_calc_roi);
+			matcher->setROI1(stereo_calc_roi);
+			/*FIXME: set ROI2 too*/
+			matcher->compute(left_rect, right_rect, left_disp);
 #ifdef ENABLE_POST_FILTER
-		right_matcher->compute(right_rect,left_rect, right_disp);
+			right_matcher->compute(right_rect,left_rect, right_disp);
 
-		wls_filter->setLambda(8000.0);
-		wls_filter->setSigmaColor(1.5);
+			wls_filter->setLambda(8000.0);
+			wls_filter->setSigmaColor(1.5);
 
-		wls_filter->filter(left_disp, left_rect, filtered_disparity_map, right_disp);
-		getDisparityVis(left_disp,raw_disp);
+			wls_filter->filter(left_disp, left_rect, filtered_disparity_map, right_disp);
+			getDisparityVis(left_disp,raw_disp);
 
-		Mat filtered_disp_vis;
-		getDisparityVis(filtered_disparity_map,filtered_disp_vis);
+			Mat filtered_disp_vis;
+			getDisparityVis(filtered_disparity_map,filtered_disp_vis);
 
-		imshow("disp", filtered_disp_vis);
+			imshow("disp", filtered_disp_vis);
 #endif
-
-		left_disp /= 16.;
-
-		reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
-		calculate_depth(xyz, img_rectified, b_roi);
+#ifdef SHOW_DISPARITY_MAP
+			getDisparityVis(left_disp, raw_disp);
+			imshow("disparity", raw_disp);
+#endif
+			left_disp /= 16.;
+			reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F);
+			calculate_depth(xyz, left_disp, filter_out, img_rectified, obj_boundings);
+		}
 		exec_time = ((double) getTickCount() - exec_time) / getTickFrequency();
 		debug("Overall Time: %lf s\n", exec_time);
-		imshow("left", img_rectified);
+		imshow("debug", filter_out);
+		imshow("depth", img_rectified);
 		waitKey(10);
 	}
 

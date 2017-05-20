@@ -100,18 +100,18 @@ void V4LStreamStereoDevice::initialize_v4l2_device(std::string dev_name, int* fd
 V4LStreamStereoDevice::V4LStreamStereoDevice(std::__cxx11::string vdev_right, std::__cxx11::string vdev_left, int width, int height)
 {
 	initialize_v4l2_device(vdev_right, &fd_right, &bufferinfo_right, &cap_right, &buffer_right, width, height);
-	initialize_v4l2_device(vdev_left, &fd_left, &bufferinfo_left, &cap_left, &buffer_left, width, height);
+	initialize_v4l2_device(vdev_left, &fd, &bufferinfo_left, &cap_left, &buffer_left, width, height);
 }
 
 V4LStreamStereoDevice::~V4LStreamStereoDevice()
 {
-	close(fd_left);
+	close(fd);
 	close(fd_right);
 }
 
 int V4LStreamStereoDevice::grabOneFrame()
 {
-	if (ioctl(fd_left, VIDIOC_QBUF, &bufferinfo_left) < 0) {
+	if (ioctl(fd, VIDIOC_QBUF, &bufferinfo_left) < 0) {
 		printf("VIDIOC_QBUF error %d\n", errno);
 	}
 
@@ -119,7 +119,7 @@ int V4LStreamStereoDevice::grabOneFrame()
 		printf("VIDIOC_QBUF error %d\n", errno);
 	}
 
-	if (ioctl(fd_left, VIDIOC_DQBUF, &bufferinfo_left) < 0) {
+	if (ioctl(fd, VIDIOC_DQBUF, &bufferinfo_left) < 0) {
 		printf("VIDIOC_DQBUF error %d\n", errno);
 	}
 

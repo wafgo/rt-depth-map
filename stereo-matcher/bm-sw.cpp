@@ -15,8 +15,6 @@ SWMatcherKonolige::SWMatcherKonolige(cv::Rect& roi1, cv::Rect& roi2, int preFilt
 {
 	matcher = cv::StereoBM::create(numOfDisparities, blockSize);
 
-	matcher->setROI1(roi1);
-	matcher->setROI2(roi2);
 	matcher->setPreFilterCap(preFilterCap);
 	matcher->setMinDisparity(minDisparity);
 	matcher->setNumDisparities(numOfDisparities);

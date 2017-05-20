@@ -31,7 +31,7 @@ public:
 private:
     void initialize_v4l2_device(std::string dev_name, int* fd, struct v4l2_buffer* buf_info,  struct v4l2_capability* caps, char** buff, int width, int height);
     struct v4l2_capability cap;
-    int fd_left, fd_right;
+    int fd, fd_right;
     struct v4l2_buffer bufferinfo_left, bufferinfo_right;
     struct v4l2_capability cap_left, cap_right;
 };
