@@ -28,7 +28,7 @@
 #include "opencv2/ximgproc/disparity_filter.hpp"
 
 //#define ENABLE_POST_FILTER
-//#define SHOW_DISPARITY_MAP
+#define SHOW_DISPARITY_MAP
 //#define SHOW_DISPARITY_VALUE
 //#define ADJUSTABLE_HSV_VALUES
 
@@ -36,9 +36,9 @@ using namespace cv;
 using namespace std;
 using namespace cv::ximgproc;
 
-#define NUM_DISPARITIES		(32 * 4)
-
+#define NUM_DISPARITIES		(32 * 6)
 #define CALIB_UNIT_MM		25.0
+#define MIN_DISP_VALS		100
 
 #ifdef ENABLE_POST_FILTER
 Ptr<DisparityWLSFilter> wls_filter;
@@ -51,7 +51,20 @@ static int iHighS = 255;
 static int iLowV = 0;
 static int iHighV = 255;
 
-#define MIN_DISP_VALS		100
+struct hsv_object_ranges {
+	String name;
+	int h_low, h_high;
+	int s_low, s_high;
+	int v_low, v_high;
+};
+
+static struct hsv_object_ranges predefined_obj_colors[] = {
+		{.name = "red", .h_low = 0, .h_high = 9, .s_low = 150, .s_high = 255, .v_low = 0, .v_high = 255},
+		{.name = "blue", .h_low = 78, .h_high = 111, .s_low = 111, .s_high = 255, .v_low = 0, .v_high = 255},
+		{.name = "green", .h_low = 61, .h_high = 92, .s_low = 100, .s_high = 255, .v_low = 0, .v_high = 255},
+		{.name = "yellow", .h_low = 23, .h_high = 37, .s_low = 117, .s_high = 255, .v_low = 111, .v_high = 255},
+		{.name = "orange", .h_low = 6, .h_high = 19, .s_low = 182, .s_high = 255, .v_low = 0, .v_high = 255},
+};
 
 static void set_label(cv::Mat& im, const std::string label, const cv::Point & origin)
 {
@@ -69,7 +82,6 @@ static void calculate_depth(Mat xyz, Mat disparity_map, Mat mask, Mat img, vecto
 {
 	Mat xyz_region;
 	Mat mask_region;
-	//Mat mask = Mat::zeros(img.size(), CV_8UC3);
 	ostringstream distance_text;
 #ifdef SHOW_DISPARITY_VALUE
 	Mat tmp_disp_map;
@@ -80,7 +92,6 @@ static void calculate_depth(Mat xyz, Mat disparity_map, Mat mask, Mat img, vecto
 		if (reg.area() < MIN_DISP_VALS)
 			continue;
 
-		//cout << "----> " << mask(reg) << endl;
 		double res = 0.0;
 		double disp_mean = 0.0;
 		int cnt = 0;
@@ -313,7 +324,7 @@ int main(int argc, char** argv)
 
 			vector<Rect> obj_boundings;
 			find_all_contour_boxes(contours, hierarchy, obj_boundings, stereo_calc_roi);
-			matcher->setROI1(stereo_calc_roi);
+			//matcher->setROI1(stereo_calc_roi);
 			/*FIXME: set ROI2 too*/
 			matcher->compute(left_rect, right_rect, left_disp);
 #ifdef ENABLE_POST_FILTER
