@@ -6,6 +6,7 @@ include Makefile.include
 
 subdirs := filter/ decoder/ stereo-matcher/ stream/ utils/
 clean_subdirs := $(addsuffix __clean,$(subdirs))
+calibration_files := extrinsics.yml intrinsics.yml
 
 obj-y += main.o
 target := rt-depth-map.elf
@@ -20,8 +21,8 @@ copy_to_target: clean all
 ifeq ($(CROSS_COMPILE),)
 	@echo "need a cross compile build"
 else
-	@echo "[CP] $(target) to $(ROOTFS)"
-	@cp $(target) $(ROOTFS)
+	@echo "[CP] $(target) $(calibration_files) to $(ROOTFS)"
+	@cp $(target) $(calibration_files) $(ROOTFS)
 endif
 	
 $(target): $(subdirs) $(obj-y)

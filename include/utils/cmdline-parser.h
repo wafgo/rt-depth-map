@@ -36,10 +36,54 @@ public:
 		return adjustable;
 	}
 
+	const String& getLeftCameraDevice() const
+	{
+		return leftCameraDevice;
+	}
+
+	const String& getRightCameraDevice() const
+	{
+		return rightCameraDevice;
+	}
+
+	const String& getExtrinsicsFileName() const
+	{
+		return extrinsicsFileName;
+	}
+
+	const String& getIntrinsicsFileName() const
+	{
+		return intrinsicsFileName;
+	}
+
+	int getNumOfDisparities() const
+	{
+		return numOfDisparities;
+	}
+
+	int getMinimalObjectSize() const
+	{
+		return minimalObjectSize;
+	}
+
+	double getCalibrationUnit() const
+	{
+		return calibrationUnit;
+	}
+
+	bool isDisparityMap() const
+	{
+		return disparityMap;
+	}
+
 private:
 	CommandLineParser* parser;
 	int height, width;
-	bool adjustable;
+	bool adjustable, disparityMap;
+	String leftCameraDevice, rightCameraDevice;
+	String intrinsicsFileName, extrinsicsFileName;
+	int numOfDisparities, minimalObjectSize;
+	double calibrationUnit;
 };
 
 

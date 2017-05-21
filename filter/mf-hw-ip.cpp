@@ -10,10 +10,6 @@
 #define XMORPH_FILTER_MAJOR					10
 #define XMORPH_FILTER_MINOR					235
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-
 //IOCTL calls for the filter
 #define XMORPH_IOCTL_BASE					'S'
 #define XMORPH_START						_IO(XMORPH_IOCTL_BASE, 0)

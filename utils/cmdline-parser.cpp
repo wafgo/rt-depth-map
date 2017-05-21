@@ -6,19 +6,35 @@
  */
 #include "utils/cmdline-parser.h"
 
-
+//#define NUM_DISPARITIES		(32 * 6)
 RtDepthMapCmdLineParser::RtDepthMapCmdLineParser(char** cmd_options,
 		int num_options)
 {
-	const String opts = "{help| |Prints this}"
-			"{h height|720|video vertical resolution}"
-			"{w width|1280|video horizontal resolution}"
-			"{a adjustable|0|allow adjust the detectable hsv colors through trackbars}"
-			"{dp disparity-map|0|shows the disparity map}"
+	const String opts =
+			"{help| |Prints this}"
+					"{h height|720|video vertical resolution}"
+					"{w width|1280|video horizontal resolution}"
+					"{ad adjustable|0|allow adjust the detectable hsv colors through trackbars}"
+					"{dp disparity-map|1|shows the disparity map}"
+					"{lc left-camera-device|/dev/video0|set the video device for the left camera}"
+					"{rc right-camera-device|/dev/video1|set the video device for the right camera}"
+					"{i intrinsics-file-name|intrinsics.yml|file name for the camera intrinisics}"
+					"{e extrinsics-file-name|extrinsics.yml|file name for the camera extrinsics}"
+					"{nd number-of-disparities|192|maximum number of disparities to calculate, increasing this value improves the quality but also increases the execution time}"
+					"{mos minimal-object-size|100|set the minimal detectable object size in pixel}"
+					"{cu calibration-unit|25.0|set the calibration unit in millimeter for the reprojection, if calibrated with a chessboard patter, this should be set to the edge length of one chess field}"
 			;
 
 	parser = new CommandLineParser(num_options, cmd_options, opts);
 	height = parser->get<int>("h");
 	width = parser->get<int>("w");
-	adjustable = parser->get<bool>("a");
+	adjustable = parser->get<bool>("ad");
+	leftCameraDevice = parser->get<String>("lc");
+	rightCameraDevice = parser->get<String>("rc");
+	intrinsicsFileName = parser->get<String>("i");
+	extrinsicsFileName = parser->get<String>("e");
+	numOfDisparities = parser->get<int>("nd");
+	minimalObjectSize = parser->get<int>("mos");
+	calibrationUnit = parser->get<double>("cu");
+	disparityMap = parser->get<bool>("dp");
 }
