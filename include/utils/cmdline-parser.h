@@ -17,9 +17,9 @@
 
 using namespace cv;
 
-class RtDepthMapCmdLineParser {
+class EstimatorCmdLineParser {
 public:
-	RtDepthMapCmdLineParser(char** cmd_options, int num_options);
+	EstimatorCmdLineParser(char** cmd_options, int num_options);
 
 	int getHeight() const
 	{

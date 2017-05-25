@@ -74,6 +74,8 @@ public:
 	HWMatcherDisparityCoprocessor(const char* uio_name, int width, int height);
 	~HWMatcherDisparityCoprocessor();
 	int compute(InputArray left, InputArray right, OutputArray out);
+	void setROI1(cv::Rect roi1) {}
+	void setROI2(cv::Rect roi2) {}
 private:
 	int line_from_file(char* filename, char* linebuf);
 	int uio_info_read_map_size(struct dcx_uio_info* info, int n);

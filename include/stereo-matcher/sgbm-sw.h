@@ -29,6 +29,8 @@ public:
 			int speckleWindowSize, int speckleRange, int disp12MaxDiff);
 	~SWSemiGlobalMatcher();
 	int compute(InputArray left, InputArray right, OutputArray out);
+	void setROI1(cv::Rect roi1) {}
+	void setROI2(cv::Rect roi2) {}
 private:
 	Ptr<StereoSGBM> matcher;
 };

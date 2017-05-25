@@ -8,7 +8,8 @@ subdirs := filter/ decoder/ stereo-matcher/ stream/ utils/
 clean_subdirs := $(addsuffix __clean,$(subdirs))
 calibration_files := extrinsics.yml intrinsics.yml
 
-obj-y += main.o
+obj-y += main.o estimator.o
+
 target := rt-depth-map.elf
 
 all-obj = $(sort $(patsubst ./%,%,$(shell find . -type f -name \*.o)))

@@ -7,7 +7,7 @@
 #include "utils/cmdline-parser.h"
 
 //#define NUM_DISPARITIES		(32 * 6)
-RtDepthMapCmdLineParser::RtDepthMapCmdLineParser(char** cmd_options,
+EstimatorCmdLineParser::EstimatorCmdLineParser(char** cmd_options,
 		int num_options)
 {
 	const String opts =
@@ -28,7 +28,7 @@ RtDepthMapCmdLineParser::RtDepthMapCmdLineParser(char** cmd_options,
 	parser = new CommandLineParser(num_options, cmd_options, opts);
 	height = parser->get<int>("h");
 	width = parser->get<int>("w");
-	adjustable = parser->get<bool>("ad");
+	adjustable = (bool)parser->get<int>("ad");
 	leftCameraDevice = parser->get<String>("lc");
 	rightCameraDevice = parser->get<String>("rc");
 	intrinsicsFileName = parser->get<String>("i");
@@ -36,5 +36,5 @@ RtDepthMapCmdLineParser::RtDepthMapCmdLineParser(char** cmd_options,
 	numOfDisparities = parser->get<int>("nd");
 	minimalObjectSize = parser->get<int>("mos");
 	calibrationUnit = parser->get<double>("cu");
-	disparityMap = parser->get<bool>("dp");
+	disparityMap = (bool)parser->get<int>("dp");
 }

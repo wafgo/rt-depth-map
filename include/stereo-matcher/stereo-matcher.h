@@ -13,6 +13,8 @@
 class BlockMatcher {
 public:
 	virtual int compute(cv::InputArray left, cv::InputArray right, cv::OutputArray out) = 0;
+	virtual void setROI1(cv::Rect roi1) = 0;
+	virtual void setROI2(cv::Rect roi2) = 0;
 protected:
 };
 

@@ -9,11 +9,11 @@
 
 using namespace cv;
 
-SWMatcherKonolige::SWMatcherKonolige(cv::Rect& roi1, cv::Rect& roi2, int preFilterCap, int blockSize, int minDisparity,
+SWMatcherKonolige::SWMatcherKonolige(Rect& roi1, Rect& roi2, int preFilterCap, int blockSize, int minDisparity,
 		int textureThreshold, int numOfDisparities, int maxDisparity, int uniquenessRatio, int speckleWindowSize,
 		int speckleRange, int disp12MaxDiff)
 {
-	matcher = cv::StereoBM::create(numOfDisparities, blockSize);
+	matcher = StereoBM::create(numOfDisparities, blockSize);
 
 	matcher->setPreFilterCap(preFilterCap);
 	matcher->setMinDisparity(minDisparity);
@@ -37,12 +37,12 @@ int SWMatcherKonolige::compute(InputArray left, InputArray right, OutputArray ou
 	return 0;
 }
 
-void SWMatcherKonolige::setROI1(cv::Rect roi1)
+void SWMatcherKonolige::setROI1(Rect roi1)
 {
 	matcher->setROI1(roi1);
 }
 
-void SWMatcherKonolige::setROI2(cv::Rect roi2)
+void SWMatcherKonolige::setROI2(Rect roi2)
 {
 	matcher->setROI2(roi2);
 }
