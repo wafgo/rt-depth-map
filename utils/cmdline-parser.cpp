@@ -36,5 +36,9 @@ EstimatorCmdLineParser::EstimatorCmdLineParser(char** cmd_options,
 	numOfDisparities = parser->get<int>("nd");
 	minimalObjectSize = parser->get<int>("mos");
 	calibrationUnit = parser->get<double>("cu");
+#ifdef __ZYNQ__
+	disparityMap = false;
+#else
 	disparityMap = (bool)parser->get<int>("dp");
+#endif
 }

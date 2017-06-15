@@ -1,0 +1,167 @@
+\hypertarget{classVideoStreamStereoDevice}{}\section{Video\+Stream\+Stereo\+Device Class Reference}
+\label{classVideoStreamStereoDevice}\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+
+
+{\ttfamily \#include $<$video-\/stream-\/stereo-\/device.\+h$>$}
+
+
+
+Inheritance diagram for Video\+Stream\+Stereo\+Device\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=227pt]{classVideoStreamStereoDevice__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Video\+Stream\+Stereo\+Device\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=260pt]{classVideoStreamStereoDevice__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classVideoStreamStereoDevice_a6ff6603f94f44f7dac28de4ac195a18c}{Video\+Stream\+Stereo\+Device} ()
+\item 
+int \hyperlink{classVideoStreamStereoDevice_ab298f30a6339e8729d95b58fec0fdd42}{get\+Frame\+Size} () const 
+\item 
+int \hyperlink{classVideoStreamStereoDevice_a17527e897d16e363003d37c74b390e33}{get\+Width} () const 
+\item 
+void \hyperlink{classVideoStreamStereoDevice_a3104086b06532035588bb8d424f15738}{set\+Width} (int value)
+\item 
+int \hyperlink{classVideoStreamStereoDevice_aa0410bfdaf9467a24e4d25fdbe7062d8}{get\+Height} () const 
+\item 
+void \hyperlink{classVideoStreamStereoDevice_a536021533e1e4cb678338a961b095429}{set\+Height} (int value)
+\item 
+void \hyperlink{classVideoStreamStereoDevice_afee2d316610727d829ed75b7fe51a777}{get\+Buffers} (struct \hyperlink{structvideoStreamBuffer}{video\+Stream\+Buffer} $\ast$left, struct \hyperlink{structvideoStreamBuffer}{video\+Stream\+Buffer} $\ast$right)
+\item 
+virtual int \hyperlink{classVideoStreamStereoDevice_a98ac1bfc13c0d700ee8f4658485e0d39}{grab\+One\+Frame} ()=0
+\item 
+virtual int \hyperlink{classVideoStreamStereoDevice_aa85f8836979a061a7f11d0e3ca0f9c44}{connect\+To\+Device} ()=0
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{classVideoStreamStereoDevice_a87596748c13021a3623bb55de4c9be14}{width}
+\item 
+int \hyperlink{classVideoStreamStereoDevice_a97af0c098374ce089e71d9020b792f1f}{height}
+\item 
+char $\ast$ \hyperlink{classVideoStreamStereoDevice_a1d854ebc4900384b76163e1cd738cd98}{buffer\+\_\+right}
+\item 
+char $\ast$ \hyperlink{classVideoStreamStereoDevice_a80c9ca761c34011dc5dc90d629df3f15}{buffer\+\_\+left}
+\item 
+int \hyperlink{classVideoStreamStereoDevice_a7b8a59b76b5763b67cb357171c9396d7}{buffer\+\_\+right\+\_\+len}
+\item 
+int \hyperlink{classVideoStreamStereoDevice_a0ae10b0a0bc18b5f3899954c67347c61}{buffer\+\_\+left\+\_\+len}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{Video\+Stream\+Stereo\+Device()}{VideoStreamStereoDevice()}}]{\setlength{\rightskip}{0pt plus 5cm}Video\+Stream\+Stereo\+Device\+::\+Video\+Stream\+Stereo\+Device (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [explicit]}}\hypertarget{classVideoStreamStereoDevice_a6ff6603f94f44f7dac28de4ac195a18c}{}\label{classVideoStreamStereoDevice_a6ff6603f94f44f7dac28de4ac195a18c}
+
+
+\subsection{Member Function Documentation}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!connect\+To\+Device@{connect\+To\+Device}}
+\index{connect\+To\+Device@{connect\+To\+Device}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{connect\+To\+Device()=0}{connectToDevice()=0}}]{\setlength{\rightskip}{0pt plus 5cm}virtual int Video\+Stream\+Stereo\+Device\+::connect\+To\+Device (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}\hypertarget{classVideoStreamStereoDevice_aa85f8836979a061a7f11d0e3ca0f9c44}{}\label{classVideoStreamStereoDevice_aa85f8836979a061a7f11d0e3ca0f9c44}
+
+
+Implemented in \hyperlink{classV4LStreamStereoDevice_a0ecb2dd2636fcbfccc0e43604bf9bd14}{V4\+L\+Stream\+Stereo\+Device}.
+
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!get\+Buffers@{get\+Buffers}}
+\index{get\+Buffers@{get\+Buffers}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{get\+Buffers(struct video\+Stream\+Buffer $\ast$left, struct video\+Stream\+Buffer $\ast$right)}{getBuffers(struct videoStreamBuffer *left, struct videoStreamBuffer *right)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Stream\+Stereo\+Device\+::get\+Buffers (
+\begin{DoxyParamCaption}
+\item[{struct {\bf video\+Stream\+Buffer} $\ast$}]{left, }
+\item[{struct {\bf video\+Stream\+Buffer} $\ast$}]{right}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoStreamStereoDevice_afee2d316610727d829ed75b7fe51a777}{}\label{classVideoStreamStereoDevice_afee2d316610727d829ed75b7fe51a777}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!get\+Frame\+Size@{get\+Frame\+Size}}
+\index{get\+Frame\+Size@{get\+Frame\+Size}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{get\+Frame\+Size() const }{getFrameSize() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::get\+Frame\+Size (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoStreamStereoDevice_ab298f30a6339e8729d95b58fec0fdd42}{}\label{classVideoStreamStereoDevice_ab298f30a6339e8729d95b58fec0fdd42}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!get\+Height@{get\+Height}}
+\index{get\+Height@{get\+Height}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{get\+Height() const }{getHeight() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::get\+Height (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoStreamStereoDevice_aa0410bfdaf9467a24e4d25fdbe7062d8}{}\label{classVideoStreamStereoDevice_aa0410bfdaf9467a24e4d25fdbe7062d8}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!get\+Width@{get\+Width}}
+\index{get\+Width@{get\+Width}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{get\+Width() const }{getWidth() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::get\+Width (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoStreamStereoDevice_a17527e897d16e363003d37c74b390e33}{}\label{classVideoStreamStereoDevice_a17527e897d16e363003d37c74b390e33}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!grab\+One\+Frame@{grab\+One\+Frame}}
+\index{grab\+One\+Frame@{grab\+One\+Frame}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{grab\+One\+Frame()=0}{grabOneFrame()=0}}]{\setlength{\rightskip}{0pt plus 5cm}virtual int Video\+Stream\+Stereo\+Device\+::grab\+One\+Frame (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}\hypertarget{classVideoStreamStereoDevice_a98ac1bfc13c0d700ee8f4658485e0d39}{}\label{classVideoStreamStereoDevice_a98ac1bfc13c0d700ee8f4658485e0d39}
+
+
+Implemented in \hyperlink{classV4LStreamStereoDevice_af5170cee3401eb70e771b56fbf2104d7}{V4\+L\+Stream\+Stereo\+Device}.
+
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!set\+Height@{set\+Height}}
+\index{set\+Height@{set\+Height}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{set\+Height(int value)}{setHeight(int value)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Stream\+Stereo\+Device\+::set\+Height (
+\begin{DoxyParamCaption}
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoStreamStereoDevice_a536021533e1e4cb678338a961b095429}{}\label{classVideoStreamStereoDevice_a536021533e1e4cb678338a961b095429}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!set\+Width@{set\+Width}}
+\index{set\+Width@{set\+Width}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{set\+Width(int value)}{setWidth(int value)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Stream\+Stereo\+Device\+::set\+Width (
+\begin{DoxyParamCaption}
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoStreamStereoDevice_a3104086b06532035588bb8d424f15738}{}\label{classVideoStreamStereoDevice_a3104086b06532035588bb8d424f15738}
+
+
+\subsection{Member Data Documentation}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!buffer\+\_\+left@{buffer\+\_\+left}}
+\index{buffer\+\_\+left@{buffer\+\_\+left}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{buffer\+\_\+left}{buffer_left}}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ Video\+Stream\+Stereo\+Device\+::buffer\+\_\+left\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a80c9ca761c34011dc5dc90d629df3f15}{}\label{classVideoStreamStereoDevice_a80c9ca761c34011dc5dc90d629df3f15}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!buffer\+\_\+left\+\_\+len@{buffer\+\_\+left\+\_\+len}}
+\index{buffer\+\_\+left\+\_\+len@{buffer\+\_\+left\+\_\+len}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{buffer\+\_\+left\+\_\+len}{buffer_left_len}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::buffer\+\_\+left\+\_\+len\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a0ae10b0a0bc18b5f3899954c67347c61}{}\label{classVideoStreamStereoDevice_a0ae10b0a0bc18b5f3899954c67347c61}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!buffer\+\_\+right@{buffer\+\_\+right}}
+\index{buffer\+\_\+right@{buffer\+\_\+right}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{buffer\+\_\+right}{buffer_right}}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ Video\+Stream\+Stereo\+Device\+::buffer\+\_\+right\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a1d854ebc4900384b76163e1cd738cd98}{}\label{classVideoStreamStereoDevice_a1d854ebc4900384b76163e1cd738cd98}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!buffer\+\_\+right\+\_\+len@{buffer\+\_\+right\+\_\+len}}
+\index{buffer\+\_\+right\+\_\+len@{buffer\+\_\+right\+\_\+len}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{buffer\+\_\+right\+\_\+len}{buffer_right_len}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::buffer\+\_\+right\+\_\+len\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a7b8a59b76b5763b67cb357171c9396d7}{}\label{classVideoStreamStereoDevice_a7b8a59b76b5763b67cb357171c9396d7}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!height@{height}}
+\index{height@{height}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{height}{height}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::height\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a97af0c098374ce089e71d9020b792f1f}{}\label{classVideoStreamStereoDevice_a97af0c098374ce089e71d9020b792f1f}
+\index{Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}!width@{width}}
+\index{width@{width}!Video\+Stream\+Stereo\+Device@{Video\+Stream\+Stereo\+Device}}
+\subsubsection[{\texorpdfstring{width}{width}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Stream\+Stereo\+Device\+::width\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoStreamStereoDevice_a87596748c13021a3623bb55de4c9be14}{}\label{classVideoStreamStereoDevice_a87596748c13021a3623bb55de4c9be14}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/stream/\hyperlink{video-stream-stereo-device_8h}{video-\/stream-\/stereo-\/device.\+h}\item 
+stream/\hyperlink{video-stream-stereo-device_8cpp}{video-\/stream-\/stereo-\/device.\+cpp}\end{DoxyCompactItemize}

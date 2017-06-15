@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['s_5fhigh',['s_high',['../structhsv__object__ranges.html#ab49c867dfdfbcf720be3b75e2379f093',1,'hsv_object_ranges']]],
+  ['s_5flow',['s_low',['../structhsv__object__ranges.html#a88708aeb732887c5b8e2b5c0809de85c',1,'hsv_object_ranges']]],
+  ['setbpp',['setBpp',['../classVideoFilterDevice.html#a61c87ce1026569c72eab67ec1cd1140d',1,'VideoFilterDevice']]],
+  ['setheight',['setHeight',['../classVideoFilterDevice.html#a1c054f9e2254c17b017e81c858a5e6be',1,'VideoFilterDevice::setHeight()'],['../classVideoStreamStereoDevice.html#a536021533e1e4cb678338a961b095429',1,'VideoStreamStereoDevice::setHeight()']]],
+  ['setroi1',['setROI1',['../classHWMatcherDisparityCoprocessor.html#a3e267ddaad5c676e065c751d983efbf3',1,'HWMatcherDisparityCoprocessor::setROI1()'],['../classSWMatcherKonolige.html#a70a376f1d07da7000ea0a88fc3ab673a',1,'SWMatcherKonolige::setROI1()'],['../classSWSemiGlobalMatcher.html#a67bf29294ea497441037616b1fb32769',1,'SWSemiGlobalMatcher::setROI1()'],['../classBlockMatcher.html#a0b1c689296bea9085be223e53ba538a0',1,'BlockMatcher::setROI1()']]],
+  ['setroi2',['setROI2',['../classHWMatcherDisparityCoprocessor.html#af0eed2c0ada37722bbf7376369ace242',1,'HWMatcherDisparityCoprocessor::setROI2()'],['../classSWMatcherKonolige.html#a05913005c4d1b5ea6b1bbcb79deef7d0',1,'SWMatcherKonolige::setROI2()'],['../classSWSemiGlobalMatcher.html#a8cfa467d703b6a38cbd9e3ff1f9a3f70',1,'SWSemiGlobalMatcher::setROI2()'],['../classBlockMatcher.html#af80a89fda1b2fd2d78e75e7466dcbcca',1,'BlockMatcher::setROI2()']]],
+  ['setwidth',['setWidth',['../classVideoFilterDevice.html#a15f788f1d03a0fa1b44c594f4e0a3c48',1,'VideoFilterDevice::setWidth()'],['../classVideoStreamStereoDevice.html#a3104086b06532035588bb8d424f15738',1,'VideoStreamStereoDevice::setWidth()']]],
+  ['sgbm_2dsw_2ecpp',['sgbm-sw.cpp',['../sgbm-sw_8cpp.html',1,'']]],
+  ['sgbm_2dsw_2eh',['sgbm-sw.h',['../sgbm-sw_8h.html',1,'']]],
+  ['size',['size',['../structxmorph__filter__uio__map.html#a5da76368d6196b966516005fdae05937',1,'xmorph_filter_uio_map::size()'],['../structdcx__uio__map.html#aa79438031223dcae6e71bebdc58ee8f3',1,'dcx_uio_map::size()']]],
+  ['stereo_2dmatcher_2ecpp',['stereo-matcher.cpp',['../stereo-matcher_8cpp.html',1,'']]],
+  ['stereo_2dmatcher_2eh',['stereo-matcher.h',['../stereo-matcher_8h.html',1,'']]],
+  ['super',['super',['../structerror__mgr.html#a05d0382955eda152db1b6fa9ff3a3d6e',1,'error_mgr']]],
+  ['swmatcherkonolige',['SWMatcherKonolige',['../classSWMatcherKonolige.html',1,'SWMatcherKonolige'],['../classSWMatcherKonolige.html#a3938a2b9d77d4d574bc4296daca7b409',1,'SWMatcherKonolige::SWMatcherKonolige()']]],
+  ['swmorphologicalfilter',['SWMorphologicalFilter',['../classSWMorphologicalFilter.html',1,'SWMorphologicalFilter'],['../classSWMorphologicalFilter.html#a0ac1de93747948924af5ff8bf5b539de',1,'SWMorphologicalFilter::SWMorphologicalFilter()']]],
+  ['swsemiglobalmatcher',['SWSemiGlobalMatcher',['../classSWSemiGlobalMatcher.html',1,'SWSemiGlobalMatcher'],['../classSWSemiGlobalMatcher.html#a8ceda1c4cffa5b5df7540f0e8efccc7c',1,'SWSemiGlobalMatcher::SWSemiGlobalMatcher()']]]
+];

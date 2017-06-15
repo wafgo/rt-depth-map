@@ -1,0 +1,70 @@
+\hypertarget{estimator_8h}{}\section{include/estimator.h File Reference}
+\label{estimator_8h}\index{include/estimator.\+h@{include/estimator.\+h}}
+{\ttfamily \#include \char`\"{}opencv2/opencv.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/calib3d/calib3d.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/imgproc.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/imgcodecs.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/highgui.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/core/utility.\+hpp\char`\"{}}\\*
+{\ttfamily \#include $<$iostream$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}math.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$iomanip$>$}\\*
+{\ttfamily \#include \char`\"{}debug.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$signal.\+h$>$}\\*
+{\ttfamily \#include $<$unistd.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}decoder/mjpeg-\/decoder-\/sw.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stream/v4l2-\/stream-\/stereo-\/device.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}opencv2/ximgproc/disparity\+\_\+filter.\+hpp\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}helper.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}filter/filter.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stereo-\/matcher/stereo-\/matcher.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}utils/cmdline-\/parser.\+h\char`\"{}}\\*
+Include dependency graph for estimator.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{estimator_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{estimator_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structexec__time__struct}{exec\+\_\+time\+\_\+struct}
+\item 
+class \hyperlink{classEstimator}{Estimator}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{estimator_8h_a27c8cca253b95065a21f4eafcc6bf026}{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT}
+\item 
+\#define \hyperlink{estimator_8h_a6b508f4c70a2ddfefabb7e0075a032a9}{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME}(\+\_\+fn\+\_\+)~\+\_\+fn\+\_\+;
+\item 
+\#define \hyperlink{estimator_8h_acc2dee67ff0b6fd8f68f7f74f718b46c}{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\index{estimator.\+h@{estimator.\+h}!M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME}}
+\index{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME}!estimator.\+h@{estimator.\+h}}
+\subsubsection[{\texorpdfstring{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME}{MEASURE_EXECUTION_TIME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+ME(
+\begin{DoxyParamCaption}
+\item[{}]{\+\_\+fn\+\_\+}
+\end{DoxyParamCaption}
+)~\+\_\+fn\+\_\+;}\hypertarget{estimator_8h_a6b508f4c70a2ddfefabb7e0075a032a9}{}\label{estimator_8h_a6b508f4c70a2ddfefabb7e0075a032a9}
+\index{estimator.\+h@{estimator.\+h}!M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND}}
+\index{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND}!estimator.\+h@{estimator.\+h}}
+\subsubsection[{\texorpdfstring{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND}{MEASURE_EXECUTION_TIME_END}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+E\+ND}\hypertarget{estimator_8h_acc2dee67ff0b6fd8f68f7f74f718b46c}{}\label{estimator_8h_acc2dee67ff0b6fd8f68f7f74f718b46c}
+\index{estimator.\+h@{estimator.\+h}!M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT}}
+\index{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT@{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT}!estimator.\+h@{estimator.\+h}}
+\subsubsection[{\texorpdfstring{M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT}{MEASURE_EXECUTION_TIME_START}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+A\+S\+U\+R\+E\+\_\+\+E\+X\+E\+C\+U\+T\+I\+O\+N\+\_\+\+T\+I\+M\+E\+\_\+\+S\+T\+A\+RT}\hypertarget{estimator_8h_a27c8cca253b95065a21f4eafcc6bf026}{}\label{estimator_8h_a27c8cca253b95065a21f4eafcc6bf026}

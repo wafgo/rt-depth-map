@@ -97,6 +97,7 @@ Estimator::Estimator(BlockMatcher* matcher, VideoFilterDevice* filter, VideoStre
 	this->parser = cmdLineParser;
 	exec_time_func_idx = 0;
 	exec_times_tab = new struct exec_time_struct[num_exec_times_tab];
+	memset(exec_times_tab, 0, sizeof(struct exec_time_struct) * num_exec_times_tab);
 
 #ifdef ENABLE_POST_FILTER
 	right_matcher = createRightMatcher(this->bm);
@@ -109,12 +110,13 @@ Estimator::Estimator(BlockMatcher* matcher, VideoFilterDevice* filter, VideoStre
 	iLowV = 0;
 	iHighV = 255;
 
+	imgSize.width = videoDevice->getWidth();
+	imgSize.height = videoDevice->getHeight();
 	showDisparityMap = parser->isDisparityMap();
 	calibration_unit = parser->getCalibrationUnit();
-	numberOfDisparities = parser->getNumOfDisparities();
-	minObjSize = parser->getMinimalObjectSize();
-	imgSize.width = parser->getWidth();
-	imgSize.height = parser->getHeight();
+	numberOfDisparities = parser->getNumOfDisparities(imgSize.width, imgSize.height);
+	minObjSize = parser->getMinimalObjectSize(imgSize.width, imgSize.height);
+
 
 	remap_left1 = remapl1;
 	remap_left2 = remapl2;
@@ -137,7 +139,10 @@ Estimator::Estimator(BlockMatcher* matcher, VideoFilterDevice* filter, VideoStre
 
 	debug("undistorted roi width = %d, height = %d\n", roif.width, roif.height);
 
-	namedWindow("depth", 1);
+	namedWindow("depth", CV_WINDOW_NORMAL);
+#ifdef __ZYNQ__
+	setWindowProperty("depth", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+#endif
 }
 
 void Estimator::set_label(Mat& im, const string label, const Point& origin)
@@ -258,6 +263,7 @@ void Estimator::print_exec_time_stats(void)
 #ifdef ENABLE_EXECUTION_TIME_MEASUREMENT
 	size_t max_str_size = 0;
 	int i;
+	double overall_exec_time = 0.0;
 
 	for (i = 0 ; i < num_exec_times_tab ; ++i) {
 		struct exec_time_struct* et = &exec_times_tab[i];
@@ -273,9 +279,11 @@ void Estimator::print_exec_time_stats(void)
 		struct exec_time_struct* et = &exec_times_tab[i];
 
 		if (et->num) {
+			overall_exec_time += et->tv;
 			printf("[%*.*s] average execution time = %lfs measured over %d periods\n", (int)max_str_size, (int)max_str_size, et->func_name.c_str(), et->tv, et->num);
 		}
 	}
+	printf("-> average overall execution time = %lfs\n", overall_exec_time);
 #endif
 }
 

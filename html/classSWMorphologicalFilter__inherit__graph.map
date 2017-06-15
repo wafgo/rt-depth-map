@@ -1,0 +1,3 @@
+<map id="SWMorphologicalFilter" name="SWMorphologicalFilter">
+<area shape="rect" id="node2" href="$classVideoFilterDevice.html" title="{VideoFilterDevice\n|# img_width\l# img_height\l# img_bpp\l# video_in\l# video_out\l|+ getFrameSize()\l+ getBpp()\l+ setBpp()\l+ getWidth()\l+ setWidth()\l+ getHeight()\l+ setHeight()\l+ getVideoInBuffer()\l+ getVideoOutBuffer()\l+ run()\l}" alt="" coords="17,5,167,273"/>
+</map>

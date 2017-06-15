@@ -56,14 +56,14 @@ public:
 		return intrinsicsFileName;
 	}
 
-	int getNumOfDisparities() const
+	int getNumOfDisparities(int width, int height) const
 	{
-		return numOfDisparities;
+		return scale_to_width(numOfDisparities, width, height);
 	}
 
-	int getMinimalObjectSize() const
+	int getMinimalObjectSize(int width, int height) const
 	{
-		return minimalObjectSize;
+		return scale_to_resolution(minimalObjectSize, width, height);
 	}
 
 	double getCalibrationUnit() const
@@ -77,6 +77,16 @@ public:
 	}
 
 private:
+	int scale_to_resolution(int val, int width, int height) const
+	{
+		double scaled = (double) val * (width * height) / (this->width * this->height);
+		return (int) scaled;
+	}
+	int scale_to_width(int val, int width, int height) const
+	{
+		double scaled = (double) val * (width) / (this->width);
+		return (int) scaled;
+	}
 	CommandLineParser* parser;
 	int height, width;
 	bool adjustable, disparityMap;

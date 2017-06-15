@@ -1,0 +1,4 @@
+<map id="VideoFilterDevice" name="VideoFilterDevice">
+<area shape="rect" id="node2" href="$classHWMorphologicalFilterIPCore.html" title="{HWMorphologicalFilterIPCore\n||+ HWMorphologicalFilterIPCore()\l+ ~HWMorphologicalFilterIPCore()\l+ run()\l}" alt="" coords="5,321,228,428"/>
+<area shape="rect" id="node3" href="$classSWMorphologicalFilter.html" title="{SWMorphologicalFilter\n||+ SWMorphologicalFilter()\l+ run()\l}" alt="" coords="253,329,426,421"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="BlockMatcher" name="BlockMatcher">
+<area shape="rect" id="node2" href="$classHWMatcherDisparityCoprocessor.html" title="{HWMatcherDisparityCoprocessor\n||+ HWMatcherDisparityCoprocessor()\l+ ~HWMatcherDisparityCoprocessor()\l+ compute()\l+ setROI1()\l+ setROI2()\l}" alt="" coords="5,160,252,296"/>
+<area shape="rect" id="node3" href="$classSWMatcherKonolige.html" title="{SWMatcherKonolige\n||+ SWMatcherKonolige()\l+ ~SWMatcherKonolige()\l+ setROI1()\l+ setROI2()\l+ compute()\l}" alt="" coords="276,160,445,296"/>
+<area shape="rect" id="node4" href="$classSWSemiGlobalMatcher.html" title="{SWSemiGlobalMatcher\n||+ SWSemiGlobalMatcher()\l+ ~SWSemiGlobalMatcher()\l+ compute()\l+ setROI1()\l+ setROI2()\l}" alt="" coords="470,160,657,296"/>
+</map>

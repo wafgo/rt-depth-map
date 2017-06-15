@@ -50,12 +50,13 @@ static struct hsv_object_ranges predefined_obj_colors[] = {
 		{.name = "orange", .h_low = 6, .h_high = 19, .s_low = 182, .s_high = 255, .v_low = 0, .v_high = 255},
 };
 
-static int get_rectified_remap_matrices(String intrinsics_file_name, String extrinsics_file_name, Size img_size,
+static int get_rectified_remap_matrices(String intrinsics_file_name, String extrinsics_file_name, Size &img_size,
 		OutputArray left1, OutputArray left2, OutputArray right1, OutputArray right2, OutputArray Q, Rect* roi)
 {
 	Mat M1, D1, M2, D2;
 	Mat R, T, R1, P1, R2, P2;
 	Rect roi_left, roi_right;
+	Size size_from_intrinsics;
 
 	FileStorage intrinsics(intrinsics_file_name, FileStorage::READ);
 	FileStorage extrinsics(extrinsics_file_name, FileStorage::READ);
@@ -69,7 +70,8 @@ static int get_rectified_remap_matrices(String intrinsics_file_name, String extr
 	intrinsics["D1"] >> D1;
 	intrinsics["M2"] >> M2;
 	intrinsics["D2"] >> D2;
-
+	intrinsics["Width"] >> size_from_intrinsics.width;
+	intrinsics["Height"] >> size_from_intrinsics.height;
 	extrinsics["ROI1"] >> roi_left;
 	extrinsics["ROI2"] >> roi_right;
 	extrinsics["R"] >> R;
@@ -80,6 +82,11 @@ static int get_rectified_remap_matrices(String intrinsics_file_name, String extr
 		roi->y = max(roi_left.y, roi_right.y);
 		roi->width = min(roi_left.width, roi_right.width);
 		roi->height = min(roi_left.height, roi_right.height);
+	}
+
+	if (size_from_intrinsics.area() != 0) {
+		img_size.width = size_from_intrinsics.width;
+		img_size.height = size_from_intrinsics.height;
 	}
 
 	stereoRectify(M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, img_size, &roi_left,
@@ -117,13 +124,15 @@ int main(int argc, char** argv)
 
 	VideoStreamStereoDevice* videoDev = new V4LStreamStereoDevice(parser.getRightCameraDevice(), parser.getLeftCameraDevice(), imgSize.width , imgSize.height);
 	DecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
-	BlockMatcher* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, parser.getNumOfDisparities(),
-			parser.getNumOfDisparities(), 10, 100, 32, 1);
 
 #ifdef __ZYNQ__
 	VideoFilterDevice* morphFilter = new HWMorphologicalFilterIPCore(roif.width, roif.height, 8);
+	BlockMatcher* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, parser.getNumOfDisparities(imgSize.width , imgSize.height),
+			parser.getNumOfDisparities(imgSize.width , imgSize.height), 10, 100, 32, 1);
 #else
 	VideoFilterDevice* morphFilter = new SWMorphologicalFilter(roif.width, roif.height, 8);
+	BlockMatcher* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, parser.getNumOfDisparities(imgSize.width , imgSize.height),
+			parser.getNumOfDisparities(imgSize.width , imgSize.height), 10, 100, 32, 1);
 #endif
 
 	distanceEstimator = new Estimator(matcher, morphFilter, videoDev, mjpegDecoder, &parser, remap_left1, remap_left2, remap_right1, remap_right2, reprojMat, roif);

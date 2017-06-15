@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classBlockMatcher.html" title="BlockMatcher" alt="" coords="5,56,108,83"/>
+<area shape="rect" id="node2" href="$classHWMatcherDisparityCoprocessor.html" title="HWMatcherDisparityCoprocessor" alt="" coords="156,5,375,32"/>
+<area shape="rect" id="node3" href="$classSWMatcherKonolige.html" title="SWMatcherKonolige" alt="" coords="195,56,336,83"/>
+<area shape="rect" id="node4" href="$classSWSemiGlobalMatcher.html" title="SWSemiGlobalMatcher" alt="" coords="186,107,345,133"/>
+</map>

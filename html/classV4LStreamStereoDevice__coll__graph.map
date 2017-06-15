@@ -1,0 +1,3 @@
+<map id="V4LStreamStereoDevice" name="V4LStreamStereoDevice">
+<area shape="rect" id="node2" href="$classVideoStreamStereoDevice.html" title="{VideoStreamStereoDevice\n||+ VideoStreamStereoDevice()\l+ getFrameSize()\l+ getWidth()\l+ setWidth()\l+ getHeight()\l+ setHeight()\l+ getBuffers()\l+ grabOneFrame()\l+ connectToDevice()\l}" alt="" coords="5,189,201,384"/>
+</map>

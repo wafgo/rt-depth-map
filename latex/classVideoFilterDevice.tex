@@ -1,0 +1,164 @@
+\hypertarget{classVideoFilterDevice}{}\section{Video\+Filter\+Device Class Reference}
+\label{classVideoFilterDevice}\index{Video\+Filter\+Device@{Video\+Filter\+Device}}
+
+
+{\ttfamily \#include $<$filter.\+h$>$}
+
+
+
+Inheritance diagram for Video\+Filter\+Device\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVideoFilterDevice__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Video\+Filter\+Device\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=216pt]{classVideoFilterDevice__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{classVideoFilterDevice_a58e42daac01703e19465afd151a5e363}{get\+Frame\+Size} () const 
+\item 
+int \hyperlink{classVideoFilterDevice_a49cae600ea3be005491f0578e7c63863}{get\+Bpp} () const 
+\item 
+void \hyperlink{classVideoFilterDevice_a61c87ce1026569c72eab67ec1cd1140d}{set\+Bpp} (int bpp)
+\item 
+int \hyperlink{classVideoFilterDevice_a8dd4132ce498d59b867d661fc86d250e}{get\+Width} () const 
+\item 
+void \hyperlink{classVideoFilterDevice_a15f788f1d03a0fa1b44c594f4e0a3c48}{set\+Width} (int value)
+\item 
+int \hyperlink{classVideoFilterDevice_ac8ca39177708cc8d1069aa20744fbbeb}{get\+Height} () const 
+\item 
+void \hyperlink{classVideoFilterDevice_a1c054f9e2254c17b017e81c858a5e6be}{set\+Height} (int value)
+\item 
+char $\ast$ \hyperlink{classVideoFilterDevice_ac6828e9cb7f42934adbb6b278a3219c0}{get\+Video\+In\+Buffer} ()
+\item 
+char $\ast$ \hyperlink{classVideoFilterDevice_accdf0cd7c431881df4a7e4c83635674f}{get\+Video\+Out\+Buffer} ()
+\item 
+virtual int \hyperlink{classVideoFilterDevice_a8c0e8a16b0574b95ead26f9907073c8d}{run} (cv\+::\+Input\+Array in, cv\+::\+Output\+Array out)=0
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{classVideoFilterDevice_a4fdf2e5e8490e94648c880575ed36228}{img\+\_\+width}
+\item 
+int \hyperlink{classVideoFilterDevice_ac021c9c809af58cc1eaa44c72f34ad47}{img\+\_\+height}
+\item 
+int \hyperlink{classVideoFilterDevice_aa7c25e5939369c8cd7969f9a309ef818}{img\+\_\+bpp}
+\item 
+char $\ast$ \hyperlink{classVideoFilterDevice_a18807d5cf55aa13b649b827bab0a23b6}{video\+\_\+in}
+\item 
+char $\ast$ \hyperlink{classVideoFilterDevice_a0d4cbcef5b18d44e313e72c019567e0c}{video\+\_\+out}
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Bpp@{get\+Bpp}}
+\index{get\+Bpp@{get\+Bpp}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Bpp() const }{getBpp() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::get\+Bpp (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoFilterDevice_a49cae600ea3be005491f0578e7c63863}{}\label{classVideoFilterDevice_a49cae600ea3be005491f0578e7c63863}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Frame\+Size@{get\+Frame\+Size}}
+\index{get\+Frame\+Size@{get\+Frame\+Size}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Frame\+Size() const }{getFrameSize() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::get\+Frame\+Size (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoFilterDevice_a58e42daac01703e19465afd151a5e363}{}\label{classVideoFilterDevice_a58e42daac01703e19465afd151a5e363}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Height@{get\+Height}}
+\index{get\+Height@{get\+Height}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Height() const }{getHeight() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::get\+Height (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoFilterDevice_ac8ca39177708cc8d1069aa20744fbbeb}{}\label{classVideoFilterDevice_ac8ca39177708cc8d1069aa20744fbbeb}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Video\+In\+Buffer@{get\+Video\+In\+Buffer}}
+\index{get\+Video\+In\+Buffer@{get\+Video\+In\+Buffer}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Video\+In\+Buffer()}{getVideoInBuffer()}}]{\setlength{\rightskip}{0pt plus 5cm}char $\ast$ Video\+Filter\+Device\+::get\+Video\+In\+Buffer (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoFilterDevice_ac6828e9cb7f42934adbb6b278a3219c0}{}\label{classVideoFilterDevice_ac6828e9cb7f42934adbb6b278a3219c0}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Video\+Out\+Buffer@{get\+Video\+Out\+Buffer}}
+\index{get\+Video\+Out\+Buffer@{get\+Video\+Out\+Buffer}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Video\+Out\+Buffer()}{getVideoOutBuffer()}}]{\setlength{\rightskip}{0pt plus 5cm}char $\ast$ Video\+Filter\+Device\+::get\+Video\+Out\+Buffer (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoFilterDevice_accdf0cd7c431881df4a7e4c83635674f}{}\label{classVideoFilterDevice_accdf0cd7c431881df4a7e4c83635674f}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!get\+Width@{get\+Width}}
+\index{get\+Width@{get\+Width}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{get\+Width() const }{getWidth() const }}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::get\+Width (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}\hypertarget{classVideoFilterDevice_a8dd4132ce498d59b867d661fc86d250e}{}\label{classVideoFilterDevice_a8dd4132ce498d59b867d661fc86d250e}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!run@{run}}
+\index{run@{run}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{run(cv\+::\+Input\+Array in, cv\+::\+Output\+Array out)=0}{run(cv::InputArray in, cv::OutputArray out)=0}}]{\setlength{\rightskip}{0pt plus 5cm}virtual int Video\+Filter\+Device\+::run (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Input\+Array}]{in, }
+\item[{cv\+::\+Output\+Array}]{out}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}\hypertarget{classVideoFilterDevice_a8c0e8a16b0574b95ead26f9907073c8d}{}\label{classVideoFilterDevice_a8c0e8a16b0574b95ead26f9907073c8d}
+
+
+Implemented in \hyperlink{classHWMorphologicalFilterIPCore_accac538b601dbc62a61b426b476cf4d0}{H\+W\+Morphological\+Filter\+I\+P\+Core}, and \hyperlink{classSWMorphologicalFilter_a6c7ebdba2bbcd4e80aff2c3f2337f972}{S\+W\+Morphological\+Filter}.
+
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!set\+Bpp@{set\+Bpp}}
+\index{set\+Bpp@{set\+Bpp}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{set\+Bpp(int bpp)}{setBpp(int bpp)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Filter\+Device\+::set\+Bpp (
+\begin{DoxyParamCaption}
+\item[{int}]{bpp}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoFilterDevice_a61c87ce1026569c72eab67ec1cd1140d}{}\label{classVideoFilterDevice_a61c87ce1026569c72eab67ec1cd1140d}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!set\+Height@{set\+Height}}
+\index{set\+Height@{set\+Height}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{set\+Height(int value)}{setHeight(int value)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Filter\+Device\+::set\+Height (
+\begin{DoxyParamCaption}
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoFilterDevice_a1c054f9e2254c17b017e81c858a5e6be}{}\label{classVideoFilterDevice_a1c054f9e2254c17b017e81c858a5e6be}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!set\+Width@{set\+Width}}
+\index{set\+Width@{set\+Width}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{set\+Width(int value)}{setWidth(int value)}}]{\setlength{\rightskip}{0pt plus 5cm}void Video\+Filter\+Device\+::set\+Width (
+\begin{DoxyParamCaption}
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classVideoFilterDevice_a15f788f1d03a0fa1b44c594f4e0a3c48}{}\label{classVideoFilterDevice_a15f788f1d03a0fa1b44c594f4e0a3c48}
+
+
+\subsection{Member Data Documentation}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!img\+\_\+bpp@{img\+\_\+bpp}}
+\index{img\+\_\+bpp@{img\+\_\+bpp}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{img\+\_\+bpp}{img_bpp}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::img\+\_\+bpp\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoFilterDevice_aa7c25e5939369c8cd7969f9a309ef818}{}\label{classVideoFilterDevice_aa7c25e5939369c8cd7969f9a309ef818}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!img\+\_\+height@{img\+\_\+height}}
+\index{img\+\_\+height@{img\+\_\+height}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{img\+\_\+height}{img_height}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::img\+\_\+height\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoFilterDevice_ac021c9c809af58cc1eaa44c72f34ad47}{}\label{classVideoFilterDevice_ac021c9c809af58cc1eaa44c72f34ad47}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!img\+\_\+width@{img\+\_\+width}}
+\index{img\+\_\+width@{img\+\_\+width}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{img\+\_\+width}{img_width}}]{\setlength{\rightskip}{0pt plus 5cm}int Video\+Filter\+Device\+::img\+\_\+width\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoFilterDevice_a4fdf2e5e8490e94648c880575ed36228}{}\label{classVideoFilterDevice_a4fdf2e5e8490e94648c880575ed36228}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!video\+\_\+in@{video\+\_\+in}}
+\index{video\+\_\+in@{video\+\_\+in}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{video\+\_\+in}{video_in}}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ Video\+Filter\+Device\+::video\+\_\+in\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoFilterDevice_a18807d5cf55aa13b649b827bab0a23b6}{}\label{classVideoFilterDevice_a18807d5cf55aa13b649b827bab0a23b6}
+\index{Video\+Filter\+Device@{Video\+Filter\+Device}!video\+\_\+out@{video\+\_\+out}}
+\index{video\+\_\+out@{video\+\_\+out}!Video\+Filter\+Device@{Video\+Filter\+Device}}
+\subsubsection[{\texorpdfstring{video\+\_\+out}{video_out}}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ Video\+Filter\+Device\+::video\+\_\+out\hspace{0.3cm}{\ttfamily [protected]}}\hypertarget{classVideoFilterDevice_a0d4cbcef5b18d44e313e72c019567e0c}{}\label{classVideoFilterDevice_a0d4cbcef5b18d44e313e72c019567e0c}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/filter/\hyperlink{filter_8h}{filter.\+h}\item 
+filter/\hyperlink{filter_8cpp}{filter.\+cpp}\end{DoxyCompactItemize}

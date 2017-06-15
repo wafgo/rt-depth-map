@@ -1,0 +1,42 @@
+\hypertarget{mjpeg-decoder-sw_8cpp}{}\section{decoder/mjpeg-\/decoder-\/sw.cpp File Reference}
+\label{mjpeg-decoder-sw_8cpp}\index{decoder/mjpeg-\/decoder-\/sw.\+cpp@{decoder/mjpeg-\/decoder-\/sw.\+cpp}}
+{\ttfamily \#include \char`\"{}decoder/mjpeg-\/decoder-\/sw.\+h\char`\"{}}\\*
+Include dependency graph for mjpeg-\/decoder-\/sw.cpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mjpeg-decoder-sw_8cpp__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structerror__mgr}{error\+\_\+mgr}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{mjpeg-decoder-sw_8cpp_a3b7d514bed96e59bd95921d36f7b596c}{C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE}(dinfo,  tbl,  name)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\index{mjpeg-\/decoder-\/sw.\+cpp@{mjpeg-\/decoder-\/sw.\+cpp}!C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE@{C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE}}
+\index{C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE@{C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE}!mjpeg-\/decoder-\/sw.\+cpp@{mjpeg-\/decoder-\/sw.\+cpp}}
+\subsubsection[{\texorpdfstring{C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE}{COPY_HUFF_TABLE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+P\+Y\+\_\+\+H\+U\+F\+F\+\_\+\+T\+A\+B\+LE(
+\begin{DoxyParamCaption}
+\item[{}]{dinfo, }
+\item[{}]{tbl, }
+\item[{}]{name}
+\end{DoxyParamCaption}
+)}\hypertarget{mjpeg-decoder-sw_8cpp_a3b7d514bed96e59bd95921d36f7b596c}{}\label{mjpeg-decoder-sw_8cpp_a3b7d514bed96e59bd95921d36f7b596c}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \(\backslash\)
+  if(dinfo->tbl == NULL) dinfo->tbl = jpeg\_alloc\_huff\_table((j\_common\_ptr)dinfo); \(\backslash\)
+  memcpy(dinfo->tbl->bits, name\textcolor{preprocessor}{##\_len, sizeof(name##\_len)); \(\backslash\)}
+\textcolor{preprocessor}{  memset(dinfo->tbl->huffval, 0, sizeof(dinfo->tbl->huffval)); \(\backslash\)}
+\textcolor{preprocessor}{  memcpy(dinfo->tbl->huffval, name##\_val, sizeof(name##\_val)); \(\backslash\)}
+\textcolor{preprocessor}{\} while(0)}
+\end{DoxyCode}
