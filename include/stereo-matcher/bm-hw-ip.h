@@ -78,10 +78,10 @@ public:
 	void setROI2(cv::Rect roi2) {}
 private:
 	int line_from_file(char* filename, char* linebuf);
-	int uio_info_read_map_size(struct dcx_uio_info* info, int n);
-	int uio_info_read_map_addr(struct dcx_uio_info* info, int n);
-	int uio_info_read_version(dcx_uio_info* info);
-	int uio_info_read_name(struct dcx_uio_info* info);
+	int uio_info_read_map_size( int n);
+	int uio_info_read_map_addr( int n);
+	int uio_info_read_version();
+	int uio_info_read_name();
 	struct dcx_uio_info* dcx_info;
 	struct dcx_device* dcx_dev;
 };

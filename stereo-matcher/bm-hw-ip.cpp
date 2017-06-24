@@ -53,45 +53,45 @@
 #define AP_EN_BIT				0U
 #define AP_DONE_BIT				1U
 
-int HWMatcherDisparityCoprocessor::uio_info_read_name(struct dcx_uio_info* info)
+int HWMatcherDisparityCoprocessor::uio_info_read_name()
 {
 	char file[MAX_UIO_PATH_SIZE];
-	sprintf(file, "/sys/class/uio/uio%d/name", info->uio_num);
-	return line_from_file(file, info->name);
+	sprintf(file, "/sys/class/uio/uio%d/name", dcx_info->uio_num);
+	return line_from_file(file, dcx_info->name);
 }
 
-int HWMatcherDisparityCoprocessor::uio_info_read_version(dcx_uio_info* info)
+int HWMatcherDisparityCoprocessor::uio_info_read_version()
 {
 	char file[MAX_UIO_PATH_SIZE];
-	sprintf(file, "/sys/class/uio/uio%d/version", info->uio_num);
-	return line_from_file(file, info->version);
+	sprintf(file, "/sys/class/uio/uio%d/version", dcx_info->uio_num);
+	return line_from_file(file, dcx_info->version);
 }
 
-int HWMatcherDisparityCoprocessor::uio_info_read_map_addr(struct dcx_uio_info* info, int n)
+int HWMatcherDisparityCoprocessor::uio_info_read_map_addr(int n)
 {
 	int ret;
 	char file[MAX_UIO_PATH_SIZE];
-	info->maps[n].addr = UIO_INVALID_ADDR;
-	sprintf(file, "/sys/class/uio/uio%d/maps/map%d/addr", info->uio_num, n);
+	dcx_info->maps[n].addr = UIO_INVALID_ADDR;
+	sprintf(file, "/sys/class/uio/uio%d/maps/map%d/addr", dcx_info->uio_num, n);
 	FILE* fp = fopen(file, "r");
 	if (!fp)
 		return -1;
-	ret = fscanf(fp, "0x%x", &info->maps[n].addr);
+	ret = fscanf(fp, "0x%x", &dcx_info->maps[n].addr);
 	fclose(fp);
 	if (ret < 0)
 		return -2;
 	return 0;
 }
 
-int HWMatcherDisparityCoprocessor::uio_info_read_map_size(struct dcx_uio_info* info, int n)
+int HWMatcherDisparityCoprocessor::uio_info_read_map_size(int n)
 {
 	int ret;
 	char file[MAX_UIO_PATH_SIZE];
-	sprintf(file, "/sys/class/uio/uio%d/maps/map%d/size", info->uio_num, n);
+	sprintf(file, "/sys/class/uio/uio%d/maps/map%d/size", dcx_info->uio_num, n);
 	FILE* fp = fopen(file, "r");
 	if (!fp)
 		return -1;
-	ret = fscanf(fp, "0x%x", &info->maps[n].size);
+	ret = fscanf(fp, "0x%x", &dcx_info->maps[n].size);
 	fclose(fp);
 	if (ret < 0)
 		return -2;
@@ -153,11 +153,11 @@ HWMatcherDisparityCoprocessor::HWMatcherDisparityCoprocessor(const char* uio_nam
 		exit(1);
 	}
 
-	uio_info_read_name(dcx_info);
-	uio_info_read_version(dcx_info);
+	uio_info_read_name();
+	uio_info_read_version();
 	for (n = 0; n < MAX_UIO_MAPS; ++n) {
-		uio_info_read_map_addr(dcx_info, n);
-		uio_info_read_map_size(dcx_info, n);
+		uio_info_read_map_addr(n);
+		uio_info_read_map_size(n);
 	}
 
 	sprintf(file, "/dev/uio%d", dcx_info->uio_num);
@@ -203,7 +203,6 @@ int HWMatcherDisparityCoprocessor::compute(InputArray left, InputArray right, Ou
 
 	*control_register |= (1 << AP_EN_BIT);
 
-	/*FIXME: is still far too slow to use in real time application. I need to tweak the HDL. For example by using OpenCL with Vivado HLS*/
 	while (!(*control_register & (1 << AP_DONE_BIT))) {
 		debug("current row is %d\n", *current_row_register);
 		sleep(1);

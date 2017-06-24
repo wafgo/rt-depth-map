@@ -14,68 +14,70 @@ void Estimator::run()
 	Mat contInput;
 	struct videoStreamBuffer videoBufferLeft, videoBufferRight;
 
-	exec_time = (double) getTickCount();
-	MEASURE_EXECUTION_TIME_START;
-	MEASURE_EXECUTION_TIME(videoDevice->grabOneFrame());
-	videoDevice->getBuffers(&videoBufferLeft, &videoBufferRight);
+	while (1) {
+		exec_time = (double) getTickCount();
+		MEASURE_EXECUTION_TIME_START;
+		MEASURE_EXECUTION_TIME(videoDevice->grabOneFrame());
+		videoDevice->getBuffers(&videoBufferLeft, &videoBufferRight);
 
-	MEASURE_EXECUTION_TIME(mjpegDecoder->decode(videoBufferLeft.data, videoBufferLeft.len, videoDevice->getWidth(), videoDevice->getHeight(),
-			rgb[0]));
-	MEASURE_EXECUTION_TIME(mjpegDecoder->decode(videoBufferRight.data, videoBufferRight.len, videoDevice->getWidth(), videoDevice->getHeight(),
-			rgb[1]));
+		MEASURE_EXECUTION_TIME(mjpegDecoder->decode(videoBufferLeft.data, videoBufferLeft.len, videoDevice->getWidth(), videoDevice->getHeight(),
+				rgb[0]));
+		MEASURE_EXECUTION_TIME(mjpegDecoder->decode(videoBufferRight.data, videoBufferRight.len, videoDevice->getWidth(), videoDevice->getHeight(),
+				rgb[1]));
 
-	MEASURE_EXECUTION_TIME(cvtColor(img[0], left_gray, CV_RGB2GRAY));
-	MEASURE_EXECUTION_TIME(cvtColor(img[1], right_gray, CV_RGB2GRAY));
+		MEASURE_EXECUTION_TIME(cvtColor(img[0], left_gray, CV_RGB2GRAY));
+		MEASURE_EXECUTION_TIME(cvtColor(img[1], right_gray, CV_RGB2GRAY));
 
-	MEASURE_EXECUTION_TIME(remap(left_gray, left_rect, remap_left1, remap_left2, INTER_LINEAR));
-	left_rect = left_rect(roif);
+		MEASURE_EXECUTION_TIME(remap(left_gray, left_rect, remap_left1, remap_left2, INTER_LINEAR));
+		left_rect = left_rect(roif);
 
-	MEASURE_EXECUTION_TIME(remap(right_gray, right_rect, remap_right1, remap_right2, INTER_LINEAR));
-	right_rect = right_rect(roif);
+		MEASURE_EXECUTION_TIME(remap(right_gray, right_rect, remap_right1, remap_right2, INTER_LINEAR));
+		right_rect = right_rect(roif);
 
-	MEASURE_EXECUTION_TIME(remap(img[0], img_rectified, remap_left1, remap_left2, INTER_LINEAR));
-	img_rectified = img_rectified(roif);
+		MEASURE_EXECUTION_TIME(remap(img[0], img_rectified, remap_left1, remap_left2, INTER_LINEAR));
+		img_rectified = img_rectified(roif);
 
-	MEASURE_EXECUTION_TIME(cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR));
-	MEASURE_EXECUTION_TIME(cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV)); //Convert the captured frame from BGR to HSV
-	MEASURE_EXECUTION_TIME(inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), filter_in)); //Threshold the image
-	MEASURE_EXECUTION_TIME(morphFilter->run(filter_in, filter_out));
-	MEASURE_EXECUTION_TIME(filter_out.copyTo(contInput));
-	MEASURE_EXECUTION_TIME(findContours(contInput, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0)));
-	if (contours.size() > 0) {
-		Rect matching_roi;
+		MEASURE_EXECUTION_TIME(cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR));
+		MEASURE_EXECUTION_TIME(cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV)); //Convert the captured frame from BGR to HSV
+		MEASURE_EXECUTION_TIME(inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), filter_in)); //Threshold the image
+		MEASURE_EXECUTION_TIME(morphFilter->run(filter_in, filter_out));
+		MEASURE_EXECUTION_TIME(filter_out.copyTo(contInput));
+		MEASURE_EXECUTION_TIME(findContours(contInput, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0)));
+		if (contours.size() > 0) {
+			Rect matching_roi;
 
-		vector<Rect> obj_boundings;
-		MEASURE_EXECUTION_TIME(fill_bounding_rects_of_contours(contours, hierarchy, obj_boundings, minObjSize));
-		MEASURE_EXECUTION_TIME(find_relevant_matching_region(obj_boundings, matching_roi));
-		bm->setROI1(matching_roi);
-		/*FIXME: set ROI2 too*/
-		MEASURE_EXECUTION_TIME(bm->compute(left_rect, right_rect, left_disp));
-#ifdef ENABLE_POST_FILTER
-		right_matcher->compute(right_rect,left_rect, right_disp);
+			vector<Rect> obj_boundings;
+			MEASURE_EXECUTION_TIME(fill_bounding_rects_of_contours(contours, hierarchy, obj_boundings, minObjSize));
+			MEASURE_EXECUTION_TIME(find_relevant_matching_region(obj_boundings, matching_roi));
+			bm->setROI1(matching_roi);
+			/*FIXME: set ROI2 too*/
+			MEASURE_EXECUTION_TIME(bm->compute(left_rect, right_rect, left_disp));
+	#ifdef ENABLE_POST_FILTER
+			right_matcher->compute(right_rect,left_rect, right_disp);
 
-		wls_filter->setLambda(8000.0);
-		wls_filter->setSigmaColor(1.5);
+			wls_filter->setLambda(8000.0);
+			wls_filter->setSigmaColor(1.5);
 
-		wls_filter->filter(left_disp, left_rect, filtered_disparity_map, right_disp);
-		getDisparityVis(left_disp,raw_disp);
+			wls_filter->filter(left_disp, left_rect, filtered_disparity_map, right_disp);
+			getDisparityVis(left_disp,raw_disp);
 
-		Mat filtered_disp_vis;
-		getDisparityVis(filtered_disparity_map,filtered_disp_vis);
+			Mat filtered_disp_vis;
+			getDisparityVis(filtered_disparity_map,filtered_disp_vis);
 
-		imshow("disp", filtered_disp_vis);
-#endif
-		if (showDisparityMap) {
-			getDisparityVis(left_disp, raw_disp);
-			imshow("disparity", raw_disp);
+			imshow("disp", filtered_disp_vis);
+	#endif
+			if (showDisparityMap) {
+				getDisparityVis(left_disp, raw_disp);
+				imshow("disparity", raw_disp);
+			}
+			left_disp /= 16.;
+			MEASURE_EXECUTION_TIME(reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F));
+			MEASURE_EXECUTION_TIME(calc_depth(xyz, left_disp, filter_out, img_rectified, obj_boundings, calibration_unit));
 		}
-		left_disp /= 16.;
-		MEASURE_EXECUTION_TIME(reprojectImageTo3D(left_disp, xyz, Q, true, CV_32F));
-		MEASURE_EXECUTION_TIME(calc_depth(xyz, left_disp, filter_out, img_rectified, obj_boundings, calibration_unit));
+		//debug("Overall Time: %lf s\n", ((double) getTickCount() - exec_time) / getTickFrequency());
+		imshow("depth", img_rectified);
+		waitKey(10);
 	}
-	//debug("Overall Time: %lf s\n", ((double) getTickCount() - exec_time) / getTickFrequency());
-	imshow("depth", img_rectified);
-	waitKey(10);
 }
 
 Estimator::~Estimator()

@@ -1,4 +1,4 @@
-CROSS_COMPILE = /opt/petalinux/2016.3/sysroots/x86_64-petalinux-linux/usr/bin/arm-xilinx-linux-gnueabi/arm-xilinx-linux-gnueabi-
+#CROSS_COMPILE = /opt/petalinux/2016.3/sysroots/x86_64-petalinux-linux/usr/bin/arm-xilinx-linux-gnueabi/arm-xilinx-linux-gnueabi-
 SYSROOT = /opt/petalinux/2016.3/sysroots/cortexa9hf-neon-xilinx-linux-gnueabi
 ROOTFS := /home/sefo/mounts/nfs/zrfs2/home/root/
 

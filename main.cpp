@@ -137,9 +137,7 @@ int main(int argc, char** argv)
 
 	distanceEstimator = new Estimator(matcher, morphFilter, videoDev, mjpegDecoder, &parser, remap_left1, remap_left2, remap_right1, remap_right2, reprojMat, roif);
 
-	while (1) {
-		distanceEstimator->run();
-	}
+	distanceEstimator->run();
 
 	return 0;
 }

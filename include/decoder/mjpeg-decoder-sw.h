@@ -24,9 +24,7 @@ public:
     int decode(char* in, int len, int width, int height, char* out);
 private:
     int mjpeg2rgb(char *in, int len, int width, int height, char *out);
-    static void insert_huff_tables(j_decompress_ptr dinfo);
+    static void insertHuffTables(j_decompress_ptr dinfo);
 };
-
-//int mjpeg2rgb(char *in, int len, int width, int height, char *out);
 
 #endif /* INCLUDE_MJPEG_H_ */

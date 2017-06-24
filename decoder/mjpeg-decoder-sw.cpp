@@ -85,7 +85,7 @@ MJPEGDecoderDevice::MJPEGDecoderDevice()
 
 }
 
-void MJPEGDecoderDevice::insert_huff_tables(j_decompress_ptr dinfo) {
+void MJPEGDecoderDevice::insertHuffTables(j_decompress_ptr dinfo) {
   COPY_HUFF_TABLE(dinfo, dc_huff_tbl_ptrs[0], dc_lumi);
   COPY_HUFF_TABLE(dinfo, dc_huff_tbl_ptrs[1], dc_chromi);
   COPY_HUFF_TABLE(dinfo, ac_huff_tbl_ptrs[0], ac_lumi);
@@ -115,7 +115,7 @@ int MJPEGDecoderDevice::mjpeg2rgb(char *in, int len, int width, int height, char
 
   if (dinfo.dc_huff_tbl_ptrs[0] == NULL) {
     /* This frame is missing the Huffman tables: fill in the standard ones */
-    insert_huff_tables(&dinfo);
+    insertHuffTables(&dinfo);
   }
 
   dinfo.out_color_space = JCS_RGB;
