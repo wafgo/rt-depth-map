@@ -31,7 +31,7 @@
 
 //#define ENABLE_POST_FILTER
 //#define SHOW_DISPARITY_VALUE
-#define ENABLE_EXECUTION_TIME_MEASUREMENT
+//#define ENABLE_EXECUTION_TIME_MEASUREMENT
 
 using namespace std;
 using namespace cv;

@@ -12,6 +12,7 @@ void Estimator::run()
 	Mat imgHSV;
 	Mat imgThresholded;
 	Mat contInput;
+
 	struct videoStreamBuffer videoBufferLeft, videoBufferRight;
 
 	while (1) {
@@ -36,10 +37,11 @@ void Estimator::run()
 
 		MEASURE_EXECUTION_TIME(remap(img[0], img_rectified, remap_left1, remap_left2, INTER_LINEAR));
 		img_rectified = img_rectified(roif);
-
 		MEASURE_EXECUTION_TIME(cvtColor(img_rectified, img_rectified, COLOR_RGB2BGR));
+
 		MEASURE_EXECUTION_TIME(cvtColor(img_rectified, imgHSV, COLOR_BGR2HSV)); //Convert the captured frame from BGR to HSV
 		MEASURE_EXECUTION_TIME(inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), filter_in)); //Threshold the image
+
 		MEASURE_EXECUTION_TIME(morphFilter->run(filter_in, filter_out));
 		MEASURE_EXECUTION_TIME(filter_out.copyTo(contInput));
 		MEASURE_EXECUTION_TIME(findContours(contInput, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0)));
