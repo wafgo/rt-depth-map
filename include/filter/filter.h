@@ -31,6 +31,9 @@ protected:
     int img_width, img_height, img_bpp;
     char* video_in;
     char* video_out;
+    const char* dev_name;
+    int dev_minor;
+
 };
 
 

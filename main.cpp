@@ -5,6 +5,7 @@
  *      Author: wadim mueller
  */
 
+#include <filter/generic-hw-filter-ip.h>
 #include "opencv2/opencv.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc.hpp"
@@ -25,7 +26,6 @@
 #include "stereo-matcher/sgbm-sw.h"
 #include "stereo-matcher/bm-hw-ip.h"
 #include "filter/mf-sw.h"
-#include "filter/mf-hw-ip.h"
 #include "utils/cmdline-parser.h"
 #include "helper.h"
 #include "estimator.h"
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 	DecoderDevice* mjpegDecoder = new MJPEGDecoderDevice;
 
 #ifdef __ZYNQ__
-	VideoFilterDevice* morphFilter = new HWMorphologicalFilterIPCore(roif.width, roif.height, 8);
+	VideoFilterDevice* morphFilter = new GenericHWFilterIPCore(235,"xmorph-dev", roif.width, roif.height, 8);
 	BlockMatcher* matcher = new SWMatcherKonolige(roif, roif, 31, 13, 0, 10, parser.getNumOfDisparities(imgSize.width , imgSize.height),
 			parser.getNumOfDisparities(imgSize.width , imgSize.height), 10, 100, 32, 1);
 #else

@@ -11,6 +11,7 @@
 #include "string.h"
 #include "io.h"
 
+#define __io volatile
 
 #define MAX_DISP				12
 // CTRL_BUS

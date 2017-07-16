@@ -1,1 +1,1 @@
-obj-y += mf-hw-ip.o mf-sw.o filter.o
+obj-y += generic-hw-filter-ip.o mf-sw.o filter.o

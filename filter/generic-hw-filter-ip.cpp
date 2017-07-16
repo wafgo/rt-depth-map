@@ -1,30 +1,35 @@
 /*
- * morphological_filter_hw_ip.cpp
+ * generic-hw-filter-ip.cpp
  *
  *  Created on: 02.04.2017
- *      Author: sefo
+ *      Author: wadim mueller
  */
 
-#include "filter/mf-hw-ip.h"
+#include "../include/filter/generic-hw-filter-ip.h"
 
-#define XMORPH_FILTER_MAJOR					10
-#define XMORPH_FILTER_MINOR					235
+#define IMAGE_FILTER_MAJOR						10
 
 //IOCTL calls for the filter
-#define XMORPH_IOCTL_BASE					'S'
-#define XMORPH_START						_IO(XMORPH_IOCTL_BASE, 0)
-#define XMORPH_STOP							_IO(XMORPH_IOCTL_BASE, 1)
-#define XMORPH_SET_DIM						_IO(XMORPH_IOCTL_BASE, 2)
+#define IMAGE_FILTER_IOCTL_BASE					'S'
+#define IMAGE_FILTER_START						_IO(IMAGE_FILTER_IOCTL_BASE, 0)
+#define IMAGE_FILTER_STOP						_IO(IMAGE_FILTER_IOCTL_BASE, 1)
+#define IMAGE_FILTER_SET_DIM					_IO(IMAGE_FILTER_IOCTL_BASE, 2)
 
-HWMorphologicalFilterIPCore::~HWMorphologicalFilterIPCore()
+int GenericHWFilterIPCore::obj_count = 0;
+
+GenericHWFilterIPCore::~GenericHWFilterIPCore()
 {
 	close(fd);
 }
 
-HWMorphologicalFilterIPCore::HWMorphologicalFilterIPCore(int w, int h, int bpp)
+GenericHWFilterIPCore::GenericHWFilterIPCore(int minor, const char* device_name, int w, int h, int bpp)
 {
     struct vdma_transfer_dim dim;
-	info = new struct xmorph_filter_uio_info;
+    char dev_name[20];
+
+    this->dev_name = device_name;
+    dev_minor = minor;
+	info = new struct generic_filter_uio_info;
 
 	img_bpp = bpp;
 	dim.dy = img_height = h;
@@ -33,37 +38,39 @@ HWMorphologicalFilterIPCore::HWMorphologicalFilterIPCore(int w, int h, int bpp)
 	int err = init_morphological_filter_ip();
 
 	if (err != 0) {
-		printf("Could not open xmorph filter %d\n", err);
+		printf("Could not open %s %d\n", device_name, err);
 	} else {
-		printf("successfully opened xmoprh filter ip core\n");
+		printf("successfully opened %s ip core\n", device_name);
 	}
 
+	snprintf(dev_name, sizeof(dev_name), "/dev/filter%d", obj_count);
 	/* if device file does not exist, create it */
-	if (access("/dev/xmorph0", F_OK) == -1) {
-		if (mknod("/dev/xmorph0", S_IFCHR | S_IRUSR | S_IWUSR, makedev(XMORPH_FILTER_MAJOR, XMORPH_FILTER_MINOR))) {
-			perror("mknod() error");
+	if (access(dev_name, F_OK) == -1) {
+		if (mknod(dev_name, S_IFCHR | S_IRUSR | S_IWUSR, makedev(IMAGE_FILTER_MAJOR, dev_minor))) {
+			perror("mknod() error %d");
 			exit(1);
 		} else {
 			printf("successfully created xmorph char device\n");
 		}
 	}
 
-	if ((fd = open("/dev/xmorph0", O_RDWR)) < 0) {
-		printf("Cannot open device node xfilter, shutting down the app\n");
+	if ((fd = open(dev_name, O_RDWR)) < 0) {
+		printf("Cannot open device node %s, shutting down the app\n", dev_name);
 		exit(1);
 	} else {
-		printf("successfully opened device node xfilter\n");
+		printf("successfully opened device node %s\n", dev_name);
 	}
 
-	if (ioctl(fd, XMORPH_SET_DIM, &dim) < 0) {
+	if (ioctl(fd, IMAGE_FILTER_SET_DIM, &dim) < 0) {
 		printf("Failed to set filter dimension, shutting down the app\n");
 		exit(1);
 	} else {
 		printf("successfully set filter dimensions\n");
 	}
+	obj_count++;
 }
 
-int HWMorphologicalFilterIPCore::init_morphological_filter_ip(void)
+int GenericHWFilterIPCore::init_morphological_filter_ip(void)
 {
 	struct dirent **namelist;
 	int i, n;
@@ -71,7 +78,7 @@ int HWMorphologicalFilterIPCore::init_morphological_filter_ip(void)
 	char file[MAX_UIO_PATH_SIZE];
 	char name[MAX_UIO_NAME_SIZE];
 	int flag = 0;
-	char* xmorph_name = (char*) "xmorph-dev";
+	//char* xmorph_name = (char*) "xmorph-dev";
 
 	n = scandir("/sys/class/uio", &namelist, 0, alphasort);
 	if (n < 0)
@@ -81,7 +88,7 @@ int HWMorphologicalFilterIPCore::init_morphological_filter_ip(void)
 		strcpy(file, "/sys/class/uio/");
 		strcat(file, namelist[i]->d_name);
 		strcat(file, "/name");
-		if ((line_from_file(file, name) == 0) && (strcmp(name, xmorph_name) == 0)) {
+		if ((line_from_file(file, name) == 0) && (strcmp(name, dev_name) == 0)) {
 			flag = 1;
 			s = namelist[i]->d_name;
 			s += 3; // "uio"
@@ -105,7 +112,7 @@ int HWMorphologicalFilterIPCore::init_morphological_filter_ip(void)
 	}
 
 	// NOTE: slave interface 'Axilites' should be mapped to uioX/map1
-	xmorph_ctrl_regs = (void*) mmap(NULL, info->maps[0].size, PROT_READ | PROT_WRITE, MAP_SHARED, info->uio_fd, 0);
+	control_regs = (void*) mmap(NULL, info->maps[0].size, PROT_READ | PROT_WRITE, MAP_SHARED, info->uio_fd, 0);
 
 	video_in = (char*) mmap(NULL, info->maps[1].size, PROT_READ | PROT_WRITE, MAP_SHARED, info->uio_fd,
 			1 * getpagesize());
@@ -116,11 +123,11 @@ int HWMorphologicalFilterIPCore::init_morphological_filter_ip(void)
 	return 0;
 }
 
-int HWMorphologicalFilterIPCore::run(cv::InputArray in, cv::OutputArray out)
+int GenericHWFilterIPCore::run(cv::InputArray in, cv::OutputArray out)
 {
 	int err = 0;
 
-	if (ioctl(fd, XMORPH_START, NULL) < 0) {
+	if (ioctl(fd, IMAGE_FILTER_START, NULL) < 0) {
 		printf("Failed to start Filter driver\n");
 		err = -1;
 	}
@@ -128,7 +135,7 @@ int HWMorphologicalFilterIPCore::run(cv::InputArray in, cv::OutputArray out)
 	return err;
 }
 
-int HWMorphologicalFilterIPCore::line_from_file(char* filename, char* linebuf)
+int GenericHWFilterIPCore::line_from_file(char* filename, char* linebuf)
 {
 	char* s;
 	int i;
@@ -147,21 +154,21 @@ int HWMorphologicalFilterIPCore::line_from_file(char* filename, char* linebuf)
 	return 0;
 }
 
-int HWMorphologicalFilterIPCore::uio_info_read_name(struct xmorph_filter_uio_info* info)
+int GenericHWFilterIPCore::uio_info_read_name(struct generic_filter_uio_info* info)
 {
 	char file[MAX_UIO_PATH_SIZE];
 	sprintf(file, "/sys/class/uio/uio%d/name", info->uio_num);
 	return line_from_file(file, info->name);
 }
 
-int HWMorphologicalFilterIPCore::uio_info_read_version(struct xmorph_filter_uio_info* info)
+int GenericHWFilterIPCore::uio_info_read_version(struct generic_filter_uio_info* info)
 {
 	char file[MAX_UIO_PATH_SIZE];
 	sprintf(file, "/sys/class/uio/uio%d/version", info->uio_num);
 	return line_from_file(file, info->version);
 }
 
-int HWMorphologicalFilterIPCore::uio_info_read_map_addr(struct xmorph_filter_uio_info* info, int n)
+int GenericHWFilterIPCore::uio_info_read_map_addr(struct generic_filter_uio_info* info, int n)
 {
 	int ret;
 	char file[MAX_UIO_PATH_SIZE];
@@ -177,7 +184,7 @@ int HWMorphologicalFilterIPCore::uio_info_read_map_addr(struct xmorph_filter_uio
 	return 0;
 }
 
-int HWMorphologicalFilterIPCore::uio_info_read_map_size(struct xmorph_filter_uio_info* info, int n)
+int GenericHWFilterIPCore::uio_info_read_map_size(struct generic_filter_uio_info* info, int n)
 {
 	int ret;
 	char file[MAX_UIO_PATH_SIZE];
